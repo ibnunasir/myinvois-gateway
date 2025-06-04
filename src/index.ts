@@ -1,5 +1,7 @@
 import swagger from "@elysiajs/swagger";
 import { Elysia } from "elysia";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { connectAndInitializeRedis, type redisInstance } from "./redis"; // Import new function and instance
 import { controllers } from "./routes";
 import { errorHandler } from "./utils/error-handler";
@@ -76,6 +78,22 @@ Use this gateway to easily submit invoices, credit notes, or debit notes from an
         },
       })
     );
+
+  app.get("/", () => {
+    try {
+      const htmlFilePath = join(__dirname, "static", "index.html");
+      const htmlContent = readFileSync(htmlFilePath, "utf-8");
+      return new Response(htmlContent, {
+        headers: { "Content-Type": "text/html" },
+      });
+    } catch (error) {
+      console.error("Error reading index.html:", error);
+      return new Response("Could not load the page. Please try again later.", {
+        status: 500,
+        headers: { "Content-Type": "text/plain" },
+      });
+    }
+  });
 
   controllers.forEach((controller: any) => {
     app.use(controller);

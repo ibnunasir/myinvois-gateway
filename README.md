@@ -149,7 +149,7 @@ Then, skip to step 2 (Run the Docker container), ensuring you use `farhansyah/my
       --name myinvois_gateway \
       farhansyah/myinvois-gateway
     ```
-    
+
     - Replace placeholder values for `CLIENT_ID` and `CLIENT_SECRET`.
     - The `-d` flag runs the container in detached mode.
     - Access the application at `http://localhost:3000`.
@@ -170,21 +170,28 @@ This is the recommended method for a consistent development and testing environm
 3.  **Run Docker Compose:**
     Navigate to the project root (`myinvois-gateway/`) where `docker-compose.yml` is located.
 
-        - To build images (if necessary) and start services:
-          ```bash
-          docker-compose up --build
-          ```
-        - To run in detached mode:
-          `bash
+    To build images (if necessary) and start services:
 
+    ```bash
+    docker-compose up --build
+    ```
+
+    To run in detached mode:
+
+    ```bash
     docker-compose up --build -d
-    `      The application will be available at`http://localhost:3000`. The Redis service will also be started and accessible to the application container at `redis://redis:6379`.
+    ```
+
+    The application will be available at `http://localhost:3000`. The Redis service will also be started and accessible to the application container at `redis://redis:6379`.
 
 4.  **Stopping Docker Compose:**
+
     ```bash
     docker-compose down
     ```
+
     To stop and remove volumes (e.g., Redis data):
+
     ```bash
     docker-compose down -v
     ```

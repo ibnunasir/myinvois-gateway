@@ -98,7 +98,19 @@ This method compiles the application into a standalone executable using Bun, whi
 
 ### 3. Using Docker
 
-This method involves building a Docker image from the `Dockerfile` and then running it as a container.
+This method involves running the application as a Docker container. You can either pull a pre-built image from Docker Hub or build it locally.
+
+**Option A: Pull from Docker Hub (Recommended for quick start)**
+
+You can use the pre-built image available on Docker Hub:
+
+```bash
+docker pull farhansyah/myinvois-gateway
+```
+
+Then, skip to step 2 (Run the Docker container), ensuring you use `farhansyah/myinvois-gateway` as the image name in the `docker run` command.
+
+**Option B: Build the Docker image locally**
 
 1.  **Build the Docker image:**
     From the project root (`myinvois-gateway/`), run:
@@ -110,22 +122,40 @@ This method involves building a Docker image from the `Dockerfile` and then runn
     (If using `docker buildx` and you want to load it directly into your local images: `docker buildx build -t myinvois-gateway --load .`)
 
 2.  **Run the Docker container:**
+    If you pulled the image from Docker Hub, use `farhansyah/myinvois-gateway` as the image name. If you built it locally, use `myinvois-gateway`.
+
+    #### From Local Image
+
     ```bash
+    # Example for locally built image:
     docker run -d \
       -e CLIENT_ID="your_client_id_here" \
       -e CLIENT_SECRET="your_client_secret_here" \
-      -e REDIS_URL="redis://host.docker.internal:6379" \
+      -e REDIS_URL="redis://<your_redis_host>:<your_redis_port>" \ # Optional: for Redis caching
       -p 3000:3000 \
-      --name myinvois_gateway_app \
+      --name myinvois_gateway \
       myinvois-gateway
     ```
+
+    #### From Docker Hub Image
+
+    ```bash
+    Example for Docker Hub image:
+    docker run -d \
+      -e CLIENT_ID="your_client_id_here" \
+      -e CLIENT_SECRET="your_client_secret_here" \
+      -e REDIS_URL="redis://<your_redis_host>:<your_redis_port>" \ # Optional: for Redis caching
+      -p 3000:3000 \
+      --name myinvois_gateway \
+      farhansyah/myinvois-gateway
+    ```
+    
     - Replace placeholder values for `CLIENT_ID` and `CLIENT_SECRET`.
-    - `REDIS_URL="redis://host.docker.internal:6379"` assumes you have Redis running on your host machine and accessible. If you don't need Redis, you can omit this line.
     - The `-d` flag runs the container in detached mode.
     - Access the application at `http://localhost:3000`.
-    - To see logs: `docker logs myinvois_gateway_app`
-    - To stop: `docker stop myinvois_gateway_app`
-    - To remove: `docker rm myinvois_gateway_app`
+    - To see logs: `docker logs myinvois_gateway`
+    - To stop: `docker stop myinvois_gateway`
+    - To remove: `docker rm myinvois_gateway`
 
 ### 4. Using Docker Compose
 
@@ -140,15 +170,15 @@ This is the recommended method for a consistent development and testing environm
 3.  **Run Docker Compose:**
     Navigate to the project root (`myinvois-gateway/`) where `docker-compose.yml` is located.
 
-    - To build images (if necessary) and start services:
-      ```bash
-      docker-compose up --build
-      ```
-    - To run in detached mode:
-      `bash
+        - To build images (if necessary) and start services:
+          ```bash
+          docker-compose up --build
+          ```
+        - To run in detached mode:
+          `bash
+
     docker-compose up --build -d
-    `
-      The application will be available at `http://localhost:3000`. The Redis service will also be started and accessible to the application container at `redis://redis:6379`.
+    `      The application will be available at`http://localhost:3000`. The Redis service will also be started and accessible to the application container at `redis://redis:6379`.
 
 4.  **Stopping Docker Compose:**
     ```bash
@@ -164,17 +194,3 @@ This is the recommended method for a consistent development and testing environm
 Once the application is running, API documentation (Swagger UI) can be accessed at:
 
 `http://localhost:3000/docs/api`
-
-## Linting
-
-To lint the codebase:
-
-```bash
-bun run lint
-```
-
-To automatically fix linting issues:
-
-```bash
-bun run lint:fix
-```

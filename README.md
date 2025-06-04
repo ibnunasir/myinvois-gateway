@@ -27,82 +27,154 @@ Use this gateway to easily submit invoices, credit notes, or debit notes from an
 - **Optional Redis Caching:** Improves performance and reliability by caching responses.
 - **Developer-Friendly API Docs:** Interactive API documentation available via Swagger UI.
 
-## Getting Started
+The API documentation (Swagger UI) is available at `/docs/api` when the application is running.
 
-### 1. Clone the Repository (if you haven't already)
+## Prerequisites
 
-```bash
-git clone <your-repository-url>
-cd myinvois-gateway
-```
-
-### 2. Install Dependencies
-
-The project uses Bun. If you have a `package.json` or `bun.lockb`, dependencies would typically be installed with:
-
-```bash
-bun install
-```
-
-### 3. Configure Environment Variables
-
-Create a `.env` file in the root of the project and add the necessary environment variables:
-
-```env
-CLIENT_ID="your_client_id"
-CLIENT_SECRET="your_client_secret"
-
-# Optional: For Redis caching
-# REDIS_URL="redis://username:password@host:port"
-```
-
-### 4. Development
-
-To start the development server run:
-
-```bash
-bun run dev
-```
-
-The server will start, and you should see a message like:
-`🦊 Elysia is running at http://localhost:3000` (or similar, based on your `app.server?.url`)
-
-Open http://localhost:3000/docs/api with your browser to see the API documentation.
-
-## API Documentation
-
-Interactive API documentation is available through Swagger UI once the server is running.
-Access it at: `http://localhost:3000/docs/api`
-
-The documentation provides details on:
-
-- Available endpoints (Documents, Submissions, Taxpayers).
-- Request and response schemas.
-- How to interact with the API.
-
-## Technology Stack
-
-- **Framework:** ElysiaJS
-- **Language:** TypeScript
-- **Runtime:** Bun
-- **Caching (Optional):** Redis
-- **API Documentation:** Swagger (via `@elysiajs/swagger`)
+- **Bun:** For local development and building. (Installation: [https://bun.sh/docs/installation](https://bun.sh/docs/installation))
+- **Docker & Docker Compose:** For running the application in containers. (Installation: [https://docs.docker.com/get-docker/](https://docs.docker.com/get-docker/))
+- **Git:** For cloning the repository.
 
 ## Environment Variables
 
-The application requires the following environment variables:
+This application requires the following environment variables:
 
-- `CLIENT_ID`: **Required**. Your client identifier for the MyInvois API.
-- `CLIENT_SECRET`: **Required**. Your client secret for the MyInvois API.
-- `REDIS_URL`: **Optional**. The connection URL for your Redis instance. If not provided, the application will run without Redis caching.
-  - Example: `redis://localhost:6379`
-  - Example with auth: `redis://:yourpassword@yourhost:6379`
+- `CLIENT_ID`: Your MyInvois Client ID.
+- `CLIENT_SECRET`: Your MyInvois Client Secret.
+- `REDIS_URL` (Optional): The connection URL for Redis (e.g., `redis://localhost:6379` for local development, or `redis://redis:6379` when using Docker Compose). If not provided, the application will run without Redis caching.
 
-## Project Structure (Key Files & Directories)
+**Setup:**
 
-- `src/index.ts`: Main application entry point, sets up Elysia, Swagger, Redis connection, and starts the server.
-- `src/routes/`: Contains the route controllers for different API resources.
+Create a `.env` file in the root of the project (`myinvois-gateway/.env`) and add your credentials:
 
-## Contributing
+```env
+CLIENT_ID=your_client_id_here
+CLIENT_SECRET=your_client_secret_here
+# REDIS_URL=redis://localhost:6379 # Optional: for local Bun development if using local Redis
+```
 
-Contributions are welcome! Please feel free to open an issue or submit a pull request.
+This `.env` file will be automatically used by `bun run dev`, when running the compiled binary locally (if your application loads it, typically via a library like `dotenv` which Bun might handle implicitly for `process.env`), and by Docker Compose if it's in the same directory.
+
+## Running the Application
+
+You can run the application in several ways:
+
+### 1. Local Development (using Bun)
+
+This method uses Bun to run the application directly from the source code with hot-reloading.
+
+1.  **Install dependencies:**
+    ```bash
+    bun install
+    ```
+2.  **Set environment variables:** Ensure your `.env` file in the project root is configured, or set the environment variables directly in your shell. If using local Redis, make sure `REDIS_URL` points to it (e.g., `redis://localhost:6379`).
+3.  **Run the development server:**
+    ```bash
+    bun run dev
+    ```
+    The application will typically be available at `http://localhost:3000`.
+
+### 2. Local Production Build (Binary)
+
+This method compiles the application into a standalone executable using Bun, which you can then run.
+
+1.  **Install dependencies:**
+    ```bash
+    bun install
+    ```
+2.  **Set environment variables:** Ensure your `.env` file is configured or set them in your shell.
+3.  **Build the application:**
+    ```bash
+    bun run build
+    ```
+    This will create an executable file named `server` in the project root.
+4.  **Run the executable:**
+    ```bash
+    # Make sure environment variables are set in your current shell
+    # or that the application loads them from .env
+    ./server
+    ```
+    The application will be available at `http://localhost:3000`.
+
+### 3. Using Docker
+
+This method involves building a Docker image from the `Dockerfile` and then running it as a container.
+
+1.  **Build the Docker image:**
+    From the project root (`myinvois-gateway/`), run:
+
+    ```bash
+    docker build -t myinvois-gateway .
+    ```
+
+    (If using `docker buildx` and you want to load it directly into your local images: `docker buildx build -t myinvois-gateway --load .`)
+
+2.  **Run the Docker container:**
+    ```bash
+    docker run -d \
+      -e CLIENT_ID="your_client_id_here" \
+      -e CLIENT_SECRET="your_client_secret_here" \
+      -e REDIS_URL="redis://host.docker.internal:6379" \
+      -p 3000:3000 \
+      --name myinvois_gateway_app \
+      myinvois-gateway
+    ```
+    - Replace placeholder values for `CLIENT_ID` and `CLIENT_SECRET`.
+    - `REDIS_URL="redis://host.docker.internal:6379"` assumes you have Redis running on your host machine and accessible. If you don't need Redis, you can omit this line.
+    - The `-d` flag runs the container in detached mode.
+    - Access the application at `http://localhost:3000`.
+    - To see logs: `docker logs myinvois_gateway_app`
+    - To stop: `docker stop myinvois_gateway_app`
+    - To remove: `docker rm myinvois_gateway_app`
+
+### 4. Using Docker Compose
+
+This is the recommended method for a consistent development and testing environment, as it manages both the application and Redis services.
+
+1.  **Ensure Docker Compose is installed.**
+2.  **Create/Verify `.env` file:** Make sure you have a `.env` file in the project root (`myinvois-gateway/.env`) with your `CLIENT_ID` and `CLIENT_SECRET`. The `REDIS_URL` will be handled by Docker Compose to point to its own Redis service.
+    ```env
+    CLIENT_ID=your_client_id_here
+    CLIENT_SECRET=your_client_secret_here
+    ```
+3.  **Run Docker Compose:**
+    Navigate to the project root (`myinvois-gateway/`) where `docker-compose.yml` is located.
+
+    - To build images (if necessary) and start services:
+      ```bash
+      docker-compose up --build
+      ```
+    - To run in detached mode:
+      `bash
+    docker-compose up --build -d
+    `
+      The application will be available at `http://localhost:3000`. The Redis service will also be started and accessible to the application container at `redis://redis:6379`.
+
+4.  **Stopping Docker Compose:**
+    ```bash
+    docker-compose down
+    ```
+    To stop and remove volumes (e.g., Redis data):
+    ```bash
+    docker-compose down -v
+    ```
+
+## API Documentation
+
+Once the application is running, API documentation (Swagger UI) can be accessed at:
+
+`http://localhost:3000/docs/api`
+
+## Linting
+
+To lint the codebase:
+
+```bash
+bun run lint
+```
+
+To automatically fix linting issues:
+
+```bash
+bun run lint:fix
+```

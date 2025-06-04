@@ -79,21 +79,28 @@ Use this gateway to easily submit invoices, credit notes, or debit notes from an
       })
     );
 
-  app.get("/", () => {
-    try {
-      const htmlFilePath = join(__dirname, "static", "index.html");
-      const htmlContent = readFileSync(htmlFilePath, "utf-8");
-      return new Response(htmlContent, {
-        headers: { "Content-Type": "text/html" },
-      });
-    } catch (error) {
-      console.error("Error reading index.html:", error);
-      return new Response("Could not load the page. Please try again later.", {
-        status: 500,
-        headers: { "Content-Type": "text/plain" },
-      });
-    }
-  });
+  app.get(
+    "/",
+    () => {
+      try {
+        const htmlFilePath = join(__dirname, "static", "index.html");
+        const htmlContent = readFileSync(htmlFilePath, "utf-8");
+        return new Response(htmlContent, {
+          headers: { "Content-Type": "text/html" },
+        });
+      } catch (error) {
+        console.error("Error reading index.html:", error);
+        return new Response(
+          "Could not load the page. Please try again later.",
+          {
+            status: 500,
+            headers: { "Content-Type": "text/plain" },
+          }
+        );
+      }
+    },
+    { detail: { hide: true } }
+  );
 
   controllers.forEach((controller: any) => {
     app.use(controller);

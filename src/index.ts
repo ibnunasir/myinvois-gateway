@@ -49,6 +49,7 @@ The gateway, powered by the [myinvois-client](https://github.com/farhan-syah/myi
 3.  Base64 encoding the UBL.
 4.  Formatting the request payload for the official API.
 5.  Handle the document signing.
+6.  Supporting caching through Redis (if configured).
 
 Use this gateway to easily submit invoices, credit notes, or debit notes from any application capable of making standard HTTP POST requests with a JSON body.
 `;

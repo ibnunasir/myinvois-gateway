@@ -1,10 +1,14 @@
 import type Elysia from "elysia";
-import type {
-  MyInvoisEnvironment,
-  TaxpayerIdType,
-  SearchTaxpayerTINRequestParams,
-} from "myinvois-client";
-import { MyInvoisClient } from "myinvois-client";
+// Removed MyInvoisClient specific imports as they are handled by the service
+import {
+  searchTaxpayerTINByParams,
+  getTaxpayerInfoByQRCodeFromClient,
+} from "./taxpayers.service";
+import {
+  SearchTaxpayerTINRequestQuerySchema,
+  GetTaxpayerInfoByQRCodeRequestParamsSchema,
+  TaxpayerTINScheme,
+} from "src/schemes";
 
 export const taxpayersController = (app: Elysia) => {
   return app.group("taxpayers", (app) =>
@@ -16,29 +20,8 @@ export const taxpayersController = (app: Elysia) => {
       })
       .get(
         "/search/tin",
-        async () => {
-          const CLIENT_ID = process.env.CLIENT_ID ?? "";
-          const CLIENT_SECRET = process.env.CLIENT_SECRET ?? "";
-          const environment = (process.env.MYINVOIS_ENVIRONMENT ??
-            "SANDBOX") as MyInvoisEnvironment;
-
-          if (!["SANDBOX", "PRODUCTION"].includes(environment)) {
-            throw new Error("Invalid Environment");
-          }
-          const client = new MyInvoisClient(
-            CLIENT_ID,
-            CLIENT_SECRET,
-            environment
-          );
-          const paramsById: SearchTaxpayerTINRequestParams = {
-            idType: "NRIC" as TaxpayerIdType, // Business Registration Number
-            idValue: "901103035388", // Replace with a known BRN
-          };
-          const result = await client.taxpayer.searchTaxpayerTIN(
-            paramsById,
-            "123"
-          );
-          return result;
+        async ({ query }) => {
+          return await searchTaxpayerTINByParams(query);
         },
         {
           detail: {
@@ -46,12 +29,13 @@ export const taxpayersController = (app: Elysia) => {
             description: `This API allows taxpayer’s ERP system to search for a specific
             Tax Identification Number (TIN) using the supported search parameters.`,
           },
+          query: SearchTaxpayerTINRequestQuerySchema,
         }
       )
       .get(
         "/qrcode/:id",
-        () => {
-          return "Get Taxpayer Detail by QR Code";
+        async ({ params, query }) => {
+          return await getTaxpayerInfoByQRCodeFromClient(params, query);
         },
         {
           detail: {
@@ -60,6 +44,8 @@ export const taxpayersController = (app: Elysia) => {
             information for a specific Taxpayer based on the Base64 formatted
             string obtained from scanning the respective QR code.`,
           },
+          params: GetTaxpayerInfoByQRCodeRequestParamsSchema,
+          query: TaxpayerTINScheme,
         }
       )
   );

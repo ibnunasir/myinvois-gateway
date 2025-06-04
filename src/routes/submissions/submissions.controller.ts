@@ -11,7 +11,7 @@ export const submissionsController = (app: Elysia) => {
       .get(
         "/",
         () => {
-          return "Get Submission";
+          return "Get Submission - WIP";
         },
         {
           detail: {

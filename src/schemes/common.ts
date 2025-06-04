@@ -105,6 +105,7 @@ export const IdentificationScheme = Type.Union(
   {
     description:
       "Scheme for the `identificationNumber` (NRIC, BRN, PASSPORT, ARMY).",
+    examples: ["BRN"],
   }
 );
 

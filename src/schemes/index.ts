@@ -1,5 +1,6 @@
 export * from "./documents";
 export * from "./common";
+export * from "./taxpayers";
 
 import { Type } from "@sinclair/typebox";
 

@@ -50,7 +50,7 @@ export const documentsController = (app: Elysia) => {
       .put(
         "cancel",
         () => {
-          return "Cancel Document";
+          return "Cancel Document - WIP";
         },
         {
           detail: {
@@ -64,11 +64,11 @@ export const documentsController = (app: Elysia) => {
       .put(
         "reject",
         () => {
-          return "Reject Document";
+          return "Reject Document - WIP";
         },
         {
           detail: {
-            summary: "Reject Document",
+            summary: "Reject Document - WIP",
             description: `This API allows a buyer that received an invoice to reject it
             and request the supplier to cancel it.`,
           },
@@ -77,7 +77,7 @@ export const documentsController = (app: Elysia) => {
       .get(
         "/:id",
         () => {
-          return "Get Document Details";
+          return "Get Document Details - WIP";
         },
         {
           detail: {
@@ -90,7 +90,7 @@ export const documentsController = (app: Elysia) => {
       .put(
         "search",
         () => {
-          return "Search Documents";
+          return "Search Documents - WIP";
         },
         {
           detail: {

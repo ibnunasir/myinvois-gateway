@@ -1,0 +1,31 @@
+version: "3.8"
+
+services:
+  app:
+    build:
+      dockerfile: Dockerfile
+    image: myinvois-gateway
+    ports:
+      - "3000:3000"
+    environment:
+      CLIENT_ID: ${CLIENT_ID}
+      CLIENT_SECRET: ${CLIENT_SECRET}
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      - redis
+    networks:
+      - myinvois-network
+
+  redis:
+    image: "redis:alpine"
+    volumes:
+      - redis_data:/data
+    networks:
+      - myinvois-network
+
+networks:
+  myinvois-network:
+    driver: bridge
+
+volumes:
+  redis_data:

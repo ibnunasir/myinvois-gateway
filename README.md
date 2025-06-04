@@ -201,3 +201,14 @@ This is the recommended method for a consistent development and testing environm
 Once the application is running, API documentation (Swagger UI) can be accessed at:
 
 `http://localhost:3000/docs/api`
+
+---
+
+## License
+
+This project is licensed under the GNU General Public License v3.0.
+
+A copy of the license is included in the repository in the `LICENSE.md` file.
+
+The canonical source code for MyInvois Gateway is available at:
+[myinvois-gateway](https://github.com/farhan-syah/myinvois-gateway)

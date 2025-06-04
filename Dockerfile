@@ -39,6 +39,10 @@ COPY --from=builder /app/server .
 # The destination ./src/static creates /app/src/static in the final image.
 COPY --from=builder /app/src/static ./src/static
 
+# Copy license, intent, and the Docker-specific README (renaming it to README.md)
+COPY LICENSE.md INTENT.md ./
+COPY README.docker.md README.md
+
 # Switch to non-root user
 USER appuser
 

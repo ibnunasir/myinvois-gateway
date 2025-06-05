@@ -4,10 +4,12 @@ interface Config {
   env: MyInvoisEnvironment;
   clientId: string;
   clientSecret: string;
+  port: number;
 }
 
 export const CONFIG: Config = {
   env: (process.env.ENVIRONMENT ?? "SANDBOX") as MyInvoisEnvironment,
   clientId: process.env.CLIENT_ID ?? "YOUR_CLIENT_ID",
   clientSecret: process.env.CLIENT_SECRET ?? "YOUR_CLIENT_SECRET",
+  port: process.env.PORT ? parseInt(process.env.PORT, 10) : 3000,
 };

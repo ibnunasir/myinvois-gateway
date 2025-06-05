@@ -1,13 +1,12 @@
-version: "3.8"
-
 services:
   app:
     build:
       dockerfile: Dockerfile
     image: myinvois-gateway
     ports:
-      - "3000:3000"
+      - "${PORT:-3000}:3000"
     environment:
+      ENVIRONMENT: ${ENVIRONMENT}
       CLIENT_ID: ${CLIENT_ID}
       CLIENT_SECRET: ${CLIENT_SECRET}
       REDIS_URL: redis://redis:6379

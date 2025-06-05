@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { connectAndInitializeRedis, type redisInstance } from "./redis"; // Import new function and instance
 import { controllers } from "./routes";
 import { errorHandler } from "./utils/error-handler";
+import { CONFIG } from "./config";
 
 async function startServer() {
   // Check for essential non-Redis environment variables first
@@ -106,9 +107,9 @@ Use this gateway to easily submit invoices, credit notes, or debit notes from an
     app.use(controller);
   });
 
-  app.listen(3000);
+  app.listen(CONFIG.port);
 
-  console.log(`🦊 Elysia is running at ${app.server?.url}`);
+  console.log(`MyInvois Gateway is running at ${app.server?.url}`);
   // The check for redisInstance (which is the potentially connected client)
   // is done above. If it's connected, MyInvoisClient will use it.
 }

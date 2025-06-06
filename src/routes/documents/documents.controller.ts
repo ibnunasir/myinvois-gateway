@@ -1,10 +1,16 @@
 import type Elysia from "elysia";
-import { getRecentDocuments, submitInvoices } from "./documents.service";
+import {
+  getRecentDocuments,
+  submitInvoices,
+  cancelDocument,
+} from "./documents.service";
 import {
   GetRecentDocumentsRequestQueryScheme,
   GetRecentDocumentsResponseSchema,
   SubmitInvoiceDocumentsQueryScheme,
   SubmitInvoiceDocumentsBodyScheme,
+  CancelDocumentRequestQuerySchema,
+  CancelDocumentRequestParamsSchema,
 } from "src/schemes";
 
 export const documentsController = (app: Elysia) => {
@@ -48,9 +54,9 @@ export const documentsController = (app: Elysia) => {
         }
       )
       .put(
-        "cancel",
-        () => {
-          return "Cancel Document - WIP";
+        "/:id/cancel",
+        ({ params, query }) => {
+          return cancelDocument(params, query);
         },
         {
           detail: {
@@ -59,6 +65,8 @@ export const documentsController = (app: Elysia) => {
             either self-induced cancellation or by accepting a rejection request made
             by the buyer.`,
           },
+          params: CancelDocumentRequestParamsSchema,
+          query: CancelDocumentRequestQuerySchema,
         }
       )
       .put(

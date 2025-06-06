@@ -6,7 +6,8 @@
     "dev": "bun run --watch src/index.ts",
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
-    "build": "bun build --compile --minify --target bun --outfile server ./src/index.ts"
+    "build": "bun build --compile --minify --target bun --outfile bin/myinvois-gateway ./src/index.ts",
+    "build:windows": "bun build --compile --minify --target bun-windows-x64 --outfile bin/myinvois-gateway.exe ./src/index.ts"
   },
   "dependencies": {
     "@elysiajs/swagger": "^1.3.0",

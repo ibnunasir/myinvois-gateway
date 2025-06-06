@@ -5,6 +5,7 @@ import {
   cancelDocument,
   rejectDocument,
   searchDocuments,
+  getDocumentDetails,
 } from "./documents.service";
 import {
   GetRecentDocumentsRequestQueryScheme,
@@ -16,6 +17,8 @@ import {
   RejectDocumentRequestParamsSchema,
   RejectDocumentRequestQuerySchema,
   SearchDocumentsRequestQuerySchema,
+  GetDocumentDetailsRequestParamsSchema,
+  GetDocumentDetailsRequestQuerySchema,
 } from "src/schemes";
 
 export const documentsController = (app: Elysia) => {
@@ -92,15 +95,20 @@ export const documentsController = (app: Elysia) => {
       )
       .get(
         "/:id",
-        () => {
-          return "Get Document Details - WIP";
+        async ({ params, query }) => {
+          return await getDocumentDetails(params, query);
         },
         {
           detail: {
             summary: "Get Document Details",
             description: `This API allows taxpayers to retrieve a single document's full
-            details`,
+            details. The document ID (UUID) is required as a path parameter.
+            An optional taxpayerTIN can be provided in the query if the caller
+            is an ERP system acting on behalf of a taxpayer.`,
           },
+          params: GetDocumentDetailsRequestParamsSchema,
+          query: GetDocumentDetailsRequestQuerySchema,
+          // No response schema specified by user
         }
       )
       .put(

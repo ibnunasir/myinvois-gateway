@@ -28,7 +28,7 @@ const InvoiceLineSchema = Type.Object({
   unitCode: Type.Optional(
     Type.String({
       description:
-        "Standard unit or system used to measure the product or service (UN/ECE Recommendation 20). E.g., 'KGM' for kilograms, 'UNT' for unit. https://sdk.myinvois.hasil.gov.my/codes/unit-types/",
+        "Standard unit or system used to measure the product or service (UN/ECE Recommendation 20). E.g., 'KGM' for kilograms, 'XUN' for unit. https://sdk.myinvois.hasil.gov.my/codes/unit-types/",
     })
   ),
   itemDescription: Type.String({
@@ -157,7 +157,7 @@ export const CreateInvoiceDocumentSchema = Type.Object(
             id: "1",
             quantity: 1,
             unitPrice: 10.0,
-            unitCode: "UNT",
+            unitCode: "XUN",
             subtotal: 10.0,
             itemDescription: "Test Item",
             itemCommodityClassification: {

@@ -15,6 +15,7 @@ import type {
   CancelDocumentRequestQuery,
   RejectDocumentRequestParams,
   RejectDocumentRequestQuery,
+  SearchDocumentsRequestQuery,
 } from "src/schemes";
 
 export async function getRecentDocuments(
@@ -38,6 +39,39 @@ export async function getRecentDocuments(
     const action = taxpayerTIN
       ? `fetching documents for TIN ${taxpayerTIN}`
       : "fetching documents as taxpayer";
+    // console.error(`MyInvois Gateway: Error during ${action}:`, error);
+    throw new Error(
+      `Failed during ${action}. Original error: ${
+        error instanceof Error ? error.message : String(error)
+      }`
+    );
+  }
+}
+
+export async function searchDocuments(query: SearchDocumentsRequestQuery) {
+  const client = new MyInvoisClient(
+    CONFIG.clientId,
+    CONFIG.clientSecret,
+    CONFIG.env,
+    redisInstance
+  );
+
+  const { taxpayerTIN, ...params } = query;
+  try {
+    // Assuming MyInvoisClient has a method like `searchDocuments`
+    // or getRecentDocuments can handle these broader search capabilities.
+    // If using getRecentDocuments, ensure its parameters align or it can handle the additional fields in SearchDocumentsRequestQuery.
+    const documents = await client.documents.searchDocuments(
+      params,
+      taxpayerTIN
+    );
+    return documents;
+  } catch (error) {
+    const action = taxpayerTIN
+      ? `searching documents for TIN ${taxpayerTIN} with params ${JSON.stringify(
+          params
+        )}`
+      : `searching documents with params ${JSON.stringify(params)} as taxpayer`;
     // console.error(`MyInvois Gateway: Error during ${action}:`, error);
     throw new Error(
       `Failed during ${action}. Original error: ${

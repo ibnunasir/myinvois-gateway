@@ -4,6 +4,7 @@ import {
   submitInvoices,
   cancelDocument,
   rejectDocument,
+  searchDocuments,
 } from "./documents.service";
 import {
   GetRecentDocumentsRequestQueryScheme,
@@ -14,6 +15,7 @@ import {
   CancelDocumentRequestParamsSchema,
   RejectDocumentRequestParamsSchema,
   RejectDocumentRequestQuerySchema,
+  SearchDocumentsRequestQuerySchema,
 } from "src/schemes";
 
 export const documentsController = (app: Elysia) => {
@@ -103,8 +105,8 @@ export const documentsController = (app: Elysia) => {
       )
       .put(
         "search",
-        () => {
-          return "Search Documents - WIP";
+        ({ query }) => {
+          return searchDocuments(query); // Call searchDocuments service
         },
         {
           detail: {
@@ -113,6 +115,8 @@ export const documentsController = (app: Elysia) => {
             sent or received which are available on the MyInvois System using various
             filters.`,
           },
+          query: SearchDocumentsRequestQuerySchema, // Added query schema
+          // response: GetRecentDocumentsResponseSchema, // Response schema can be added if defined
         }
       )
   );

@@ -3,6 +3,7 @@ import {
   getRecentDocuments,
   submitInvoices,
   cancelDocument,
+  rejectDocument,
 } from "./documents.service";
 import {
   GetRecentDocumentsRequestQueryScheme,
@@ -11,6 +12,8 @@ import {
   SubmitInvoiceDocumentsBodyScheme,
   CancelDocumentRequestQuerySchema,
   CancelDocumentRequestParamsSchema,
+  RejectDocumentRequestParamsSchema,
+  RejectDocumentRequestQuerySchema,
 } from "src/schemes";
 
 export const documentsController = (app: Elysia) => {
@@ -70,16 +73,19 @@ export const documentsController = (app: Elysia) => {
         }
       )
       .put(
-        "reject",
-        () => {
-          return "Reject Document - WIP";
+        "/:id/reject",
+        ({ params, query }) => {
+          return rejectDocument(params, query);
         },
         {
           detail: {
-            summary: "Reject Document - WIP",
+            summary: "Reject Document",
             description: `This API allows a buyer that received an invoice to reject it
-            and request the supplier to cancel it.`,
+            and request the supplier to cancel it. The document ID is required as a
+            path parameter, and a reason for rejection must be provided in the query.`,
           },
+          params: RejectDocumentRequestParamsSchema,
+          query: RejectDocumentRequestQuerySchema,
         }
       )
       .get(

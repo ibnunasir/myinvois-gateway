@@ -13,6 +13,8 @@ import type {
   SubmitInvoiceDocumentsQuery,
   CancelDocumentRequestParams,
   CancelDocumentRequestQuery,
+  RejectDocumentRequestParams,
+  RejectDocumentRequestQuery,
 } from "src/schemes";
 
 export async function getRecentDocuments(
@@ -36,6 +38,42 @@ export async function getRecentDocuments(
     const action = taxpayerTIN
       ? `fetching documents for TIN ${taxpayerTIN}`
       : "fetching documents as taxpayer";
+    // console.error(`MyInvois Gateway: Error during ${action}:`, error);
+    throw new Error(
+      `Failed during ${action}. Original error: ${
+        error instanceof Error ? error.message : String(error)
+      }`
+    );
+  }
+}
+
+export async function rejectDocument(
+  params: RejectDocumentRequestParams,
+  query: RejectDocumentRequestQuery
+) {
+  const client = new MyInvoisClient(
+    CONFIG.clientId,
+    CONFIG.clientSecret,
+    CONFIG.env,
+    redisInstance
+  );
+
+  const { id } = params;
+  const { reason, taxpayerTIN } = query;
+
+  try {
+    // Assuming MyInvoisClient has a method like `rejectDocument`
+    // The actual method signature might differ, adjust as needed.
+    const result = await client.documents.rejectDocument(
+      id,
+      reason,
+      taxpayerTIN
+    );
+    return result;
+  } catch (error) {
+    const action = taxpayerTIN
+      ? `rejecting document ${id} with reason "${reason}" for TIN ${taxpayerTIN}`
+      : `rejecting document ${id} with reason "${reason}" as taxpayer`;
     // console.error(`MyInvois Gateway: Error during ${action}:`, error);
     throw new Error(
       `Failed during ${action}. Original error: ${

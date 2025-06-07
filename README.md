@@ -173,13 +173,13 @@ This is the recommended method for a consistent development and testing environm
     To build images (if necessary) and start services:
 
     ```bash
-    docker-compose up --build
+    docker compose up --build
     ```
 
     To run in detached mode:
 
     ```bash
-    docker-compose up --build -d
+    docker compose up --build -d
     ```
 
     The application will be available at `http://localhost:3000`. The Redis service will also be started and accessible to the application container at `redis://redis:6379`.
@@ -187,13 +187,13 @@ This is the recommended method for a consistent development and testing environm
 4.  **Stopping Docker Compose:**
 
     ```bash
-    docker-compose down
+    docker compose down
     ```
 
     To stop and remove volumes (e.g., Redis data):
 
     ```bash
-    docker-compose down -v
+    docker compose down -v
     ```
 
 ## API Documentation

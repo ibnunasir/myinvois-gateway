@@ -19,7 +19,7 @@ COPY src ./src
 # COPY public ./public
 
 # Run the build script to compile the application
-# This will create an executable named 'server' in the current WORKDIR (/app)
+# This will create an executable named 'myinvois-gateway' in the current WORKDIR (/app/bin)
 RUN bun run build
 
 # Stage 2: Create the final production image
@@ -32,7 +32,7 @@ RUN adduser --disabled-password --gecos "" appuser \
     && chown -R appuser /app
 
 # Copy the compiled executable from the builder stage
-COPY --from=builder /app/server .
+COPY --from=builder /app/bin/myinvois-gateway .
 
 # Copy the static assets from the builder stage
 # The source /app/src/static is where they are in the builder.
@@ -53,4 +53,4 @@ EXPOSE 3000
 # will need to be provided at runtime (e.g., docker run -e VAR=value)
 
 # Command to run the application
-CMD ["./server"]
+CMD ["./myinvois-gateway"]

@@ -9,25 +9,28 @@ import {
   ItemCommodityClassificationSchema,
   AllowanceChargeScheme,
   DryRunScheme,
-  PaymentMeansSchema,
   AdditionalDocRefSchema,
+  PaymentMeansSchema,
   PaymentTermsSchema,
   PrepaidPaymentSchema,
 } from "../common";
 import { type Static, Type } from "@sinclair/typebox";
 
-const InvoiceLineSchema = Type.Object({
+const CreditNoteLineSchema = Type.Object({
   id: Type.String({
     description:
-      "Unique identifier for the invoice line (e.g., item number “1”, “2”, etc.).",
+      "Unique identifier for the credit note line (e.g., item number “1”, “2”, etc.).",
   }),
   quantity: Type.Number({
-    description: " Number of units of the product or service. E.g., 1.00.",
+    description:
+      "Number of units of the product or service being credited. E.g., 1.00.",
   }),
-  unitPrice: Type.Number(),
+  unitPrice: Type.Number({
+    description: "Unit price of the product or service being credited.",
+  }),
   subtotal: Type.Number({
     description:
-      "Subtotal for the line item: Amount of each individual item/service, excluding taxes, charges, or discounts. Quantity * unit price ",
+      "Subtotal for the line item being credited: Amount of each individual item/service, excluding taxes, charges, or discounts. Quantity * unit price.",
   }),
   unitCode: Type.Optional(
     Type.String({
@@ -37,27 +40,29 @@ const InvoiceLineSchema = Type.Object({
   ),
   itemDescription: Type.String({
     description:
-      "Description of the product or service. E.g., 'Laptop Peripherals'.",
+      "Description of the product or service being credited. E.g., 'Return of Laptop Peripherals'.",
   }),
   itemCommodityClassification: ItemCommodityClassificationSchema,
-
   lineTaxTotal: Type.Optional(LineTaxTotalSchema),
   allowanceCharges: Type.Optional(AllowanceChargeScheme),
 });
 
-export const CreateInvoiceDocumentSchema = Type.Object(
+export const CreateCreditNoteDocumentSchema = Type.Object(
   {
-    id: Type.String({ minLength: 1 }),
+    id: Type.String({
+      description: "Unique identifier for the credit note.",
+      minLength: 1,
+    }),
     issueDate: Type.String({
       format: "date",
-      description: "The current date in UTC timezone (YYYY-MM-DD) ",
+      description: "The current date in UTC timezone (YYYY-MM-DD)",
     }),
     issueTime: Type.String({
       format: "time",
       description: "The current time in UTC timezone (hh:mm:ssZ)",
     }),
     documentCurrencyCode: Type.String({
-      description: "Specific currency for the e-Invoice. E.g., “MYR”.",
+      description: "Specific currency for the e-Credit Note. E.g., “MYR”.",
       default: "MYR",
     }),
     taxCurrencyCode: Type.Optional(
@@ -66,18 +71,32 @@ export const CreateInvoiceDocumentSchema = Type.Object(
           "Optional. If not provided, defaults to `documentCurrencyCode`",
       })
     ),
+    billingReference: Type.Object(
+      {
+        uuid: Type.String({
+          description: "LHDNM's unique identifier number for the invoice",
+        }),
+        internalId: Type.String({
+          description: "User's internal identifier for the invoice",
+        }),
+      },
+      {
+        description:
+          "Reference to the original invoice to which this credit note applies.",
+      }
+    ),
     supplier: SupplierSchema,
     customer: CustomerSchema,
-    invoiceLines: Type.Array(InvoiceLineSchema, {
-      description: "List of invoice items, at least one item is required",
+    creditNoteLines: Type.Array(CreditNoteLineSchema, {
+      description: "List of credit note items, at least one item is required.",
       minItems: 1,
     }),
     taxTotal: TaxTotalSchema,
     legalMonetaryTotal: LegalMonetaryTotalSchema,
-    invoicePeriod: Type.Optional(
+    creditNotePeriod: Type.Optional(
       Type.Array(PeriodSchema, {
         description:
-          "The period(s) to which the invoice applies, if applicable.",
+          "The period(s) to which the credit note applies, if applicable.",
       })
     ),
     additionalDocumentReferences: Type.Optional(
@@ -86,7 +105,7 @@ export const CreateInvoiceDocumentSchema = Type.Object(
     paymentMeans: Type.Optional(Type.Array(PaymentMeansSchema)),
     paymentTerms: Type.Optional(Type.Array(PaymentTermsSchema)),
     prepaidPayments: Type.Optional(Type.Array(PrepaidPaymentSchema)),
-    allowanceCharges: Type.Optional(AllowanceChargeScheme),
+    allowanceCharges: Type.Optional(AllowanceChargeScheme), // Document level allowance/charges
     ublExtensions: Type.Optional(
       Type.Object({
         // TODO Define UBL extensions properties
@@ -98,10 +117,14 @@ export const CreateInvoiceDocumentSchema = Type.Object(
   {
     examples: [
       {
-        id: "22",
+        id: "CN001",
         issueDate: new Date().toISOString().split("T")[0],
         issueTime: new Date().toISOString().substring(11, 16) + ":00Z",
         documentCurrencyCode: "MYR",
+        billingReference: {
+          uuid: "4GP7CCS5FE74GBZ5QFD7EXWJ10",
+          internalId: "INV12345",
+        },
         supplier: {
           TIN: "C2584563222",
           legalName: "Test Supplier Sdn. Bhd.",
@@ -132,24 +155,24 @@ export const CreateInvoiceDocumentSchema = Type.Object(
             countryCode: "MYS",
           },
         },
-        invoiceLines: [
+        creditNoteLines: [
           {
             id: "1",
             quantity: 1,
-            unitPrice: 10.0,
+            unitPrice: 50.0,
             unitCode: "XUN",
-            subtotal: 10.0,
-            itemDescription: "Test Item",
+            subtotal: 50.0,
+            itemDescription: "Credit for returned goods",
             itemCommodityClassification: {
               code: "001",
               listID: "CLASS",
             },
             lineTaxTotal: {
-              taxAmount: 1.0,
+              taxAmount: 5.0,
               taxSubtotals: [
                 {
-                  taxableAmount: 10.0,
-                  taxAmount: 1.0,
+                  taxableAmount: 50.0,
+                  taxAmount: 5.0,
                   taxCategoryCode: "01",
                   percent: 10,
                 },
@@ -158,41 +181,44 @@ export const CreateInvoiceDocumentSchema = Type.Object(
           },
         ],
         taxTotal: {
-          totalTaxAmount: 1.0,
+          totalTaxAmount: 5.0,
           taxSubtotals: [
             {
-              taxableAmount: 10.0,
-              taxAmount: 1.0,
+              taxableAmount: 50.0,
+              taxAmount: 5.0,
               taxCategoryCode: "01",
               percent: 10,
             },
           ],
         },
         legalMonetaryTotal: {
-          lineExtensionAmount: 10.0,
-          taxExclusiveAmount: 10.0,
-          taxInclusiveAmount: 11.0,
-          payableAmount: 11.0,
+          lineExtensionAmount: 50.0,
+          taxExclusiveAmount: 50.0,
+          taxInclusiveAmount: 55.0,
+          payableAmount: 55.0,
         },
       },
     ],
   }
 );
 
-export type CreateInvoiceDocument = Static<typeof CreateInvoiceDocumentSchema>;
+export type CreateCreditNoteDocument = Static<
+  typeof CreateCreditNoteDocumentSchema
+>;
 
-export const SubmitInvoiceDocumentsBodyScheme = Type.Object({
-  documents: Type.Array(CreateInvoiceDocumentSchema, { minItems: 1 }),
+export const SubmitCreditNoteDocumentsBodyScheme = Type.Object({
+  documents: Type.Array(CreateCreditNoteDocumentSchema, { minItems: 1 }),
 });
 
-export type SubmitInvoiceDocumentsBody = Static<
-  typeof SubmitInvoiceDocumentsBodyScheme
+export type SubmitCreditNoteDocumentsBody = Static<
+  typeof SubmitCreditNoteDocumentsBodyScheme
 >;
-export const SubmitInvoiceDocumentsQueryScheme = Type.Composite([
+
+export const SubmitCreditNoteDocumentsQueryScheme = Type.Composite([
   TaxpayerTINScheme,
   DryRunScheme,
 ]);
 
-export type SubmitInvoiceDocumentsQuery = Static<
-  typeof SubmitInvoiceDocumentsQueryScheme
+export type SubmitCreditNoteDocumentsQuery = Static<
+  typeof SubmitCreditNoteDocumentsQueryScheme
 >;

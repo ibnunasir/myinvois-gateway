@@ -9,25 +9,28 @@ import {
   ItemCommodityClassificationSchema,
   AllowanceChargeScheme,
   DryRunScheme,
-  PaymentMeansSchema,
   AdditionalDocRefSchema,
+  PaymentMeansSchema,
   PaymentTermsSchema,
   PrepaidPaymentSchema,
 } from "../common";
 import { type Static, Type } from "@sinclair/typebox";
 
-const InvoiceLineSchema = Type.Object({
+const DebitNoteLineSchema = Type.Object({
   id: Type.String({
     description:
-      "Unique identifier for the invoice line (e.g., item number “1”, “2”, etc.).",
+      "Unique identifier for the debit note line (e.g., item number “1”, “2”, etc.).",
   }),
   quantity: Type.Number({
-    description: " Number of units of the product or service. E.g., 1.00.",
+    description:
+      "Number of units of the product or service being debited. E.g., 1.00.",
   }),
-  unitPrice: Type.Number(),
+  unitPrice: Type.Number({
+    description: "Unit price of the product or service being debited.",
+  }),
   subtotal: Type.Number({
     description:
-      "Subtotal for the line item: Amount of each individual item/service, excluding taxes, charges, or discounts. Quantity * unit price ",
+      "Subtotal for the line item being debited: Amount of each individual item/service, excluding taxes, charges, or discounts. Quantity * unit price.",
   }),
   unitCode: Type.Optional(
     Type.String({
@@ -37,27 +40,29 @@ const InvoiceLineSchema = Type.Object({
   ),
   itemDescription: Type.String({
     description:
-      "Description of the product or service. E.g., 'Laptop Peripherals'.",
+      "Description of the product or service being debited. E.g., 'Additional charges for expedited shipping'.",
   }),
   itemCommodityClassification: ItemCommodityClassificationSchema,
-
   lineTaxTotal: Type.Optional(LineTaxTotalSchema),
   allowanceCharges: Type.Optional(AllowanceChargeScheme),
 });
 
-export const CreateInvoiceDocumentSchema = Type.Object(
+export const CreateDebitNoteDocumentSchema = Type.Object(
   {
-    id: Type.String({ minLength: 1 }),
+    id: Type.String({
+      description: "Unique identifier for the debit note.",
+      minLength: 1,
+    }),
     issueDate: Type.String({
       format: "date",
-      description: "The current date in UTC timezone (YYYY-MM-DD) ",
+      description: "The current date in UTC timezone (YYYY-MM-DD)",
     }),
     issueTime: Type.String({
       format: "time",
       description: "The current time in UTC timezone (hh:mm:ssZ)",
     }),
     documentCurrencyCode: Type.String({
-      description: "Specific currency for the e-Invoice. E.g., “MYR”.",
+      description: "Specific currency for the e-Debit Note. E.g., “MYR”.",
       default: "MYR",
     }),
     taxCurrencyCode: Type.Optional(
@@ -66,18 +71,32 @@ export const CreateInvoiceDocumentSchema = Type.Object(
           "Optional. If not provided, defaults to `documentCurrencyCode`",
       })
     ),
+    billingReference: Type.Object(
+      {
+        uuid: Type.String({
+          description: "LHDNM's unique identifier number for the invoice",
+        }),
+        internalId: Type.String({
+          description: "User's internal identifier for the invoice",
+        }),
+      },
+      {
+        description:
+          "Reference to the original invoice to which this debit note applies.",
+      }
+    ),
     supplier: SupplierSchema,
     customer: CustomerSchema,
-    invoiceLines: Type.Array(InvoiceLineSchema, {
-      description: "List of invoice items, at least one item is required",
+    debitNoteLines: Type.Array(DebitNoteLineSchema, {
+      description: "List of debit note items, at least one item is required.",
       minItems: 1,
     }),
     taxTotal: TaxTotalSchema,
     legalMonetaryTotal: LegalMonetaryTotalSchema,
-    invoicePeriod: Type.Optional(
+    debitNotePeriod: Type.Optional(
       Type.Array(PeriodSchema, {
         description:
-          "The period(s) to which the invoice applies, if applicable.",
+          "The period(s) to which the debit note applies, if applicable.",
       })
     ),
     additionalDocumentReferences: Type.Optional(
@@ -86,7 +105,7 @@ export const CreateInvoiceDocumentSchema = Type.Object(
     paymentMeans: Type.Optional(Type.Array(PaymentMeansSchema)),
     paymentTerms: Type.Optional(Type.Array(PaymentTermsSchema)),
     prepaidPayments: Type.Optional(Type.Array(PrepaidPaymentSchema)),
-    allowanceCharges: Type.Optional(AllowanceChargeScheme),
+    allowanceCharges: Type.Optional(AllowanceChargeScheme), // Document level allowance/charges
     ublExtensions: Type.Optional(
       Type.Object({
         // TODO Define UBL extensions properties
@@ -98,10 +117,14 @@ export const CreateInvoiceDocumentSchema = Type.Object(
   {
     examples: [
       {
-        id: "22",
+        id: "DN001",
         issueDate: new Date().toISOString().split("T")[0],
         issueTime: new Date().toISOString().substring(11, 16) + ":00Z",
         documentCurrencyCode: "MYR",
+        billingReference: {
+          uuid: "4GP7CCS5FE74GBZ5QFD7EXWJ10",
+          internalId: "INV12345",
+        },
         supplier: {
           TIN: "C2584563222",
           legalName: "Test Supplier Sdn. Bhd.",
@@ -132,25 +155,25 @@ export const CreateInvoiceDocumentSchema = Type.Object(
             countryCode: "MYS",
           },
         },
-        invoiceLines: [
+        debitNoteLines: [
           {
             id: "1",
             quantity: 1,
-            unitPrice: 10.0,
+            unitPrice: 25.0,
             unitCode: "XUN",
-            subtotal: 10.0,
-            itemDescription: "Test Item",
+            subtotal: 25.0,
+            itemDescription: "Additional handling fee",
             itemCommodityClassification: {
-              code: "001",
+              code: "002",
               listID: "CLASS",
             },
             lineTaxTotal: {
-              taxAmount: 1.0,
+              taxAmount: 2.5,
               taxSubtotals: [
                 {
-                  taxableAmount: 10.0,
-                  taxAmount: 1.0,
-                  taxCategoryCode: "01",
+                  taxableAmount: 25.0,
+                  taxAmount: 2.5,
+                  taxCategoryCode: "01", // Standard Rate
                   percent: 10,
                 },
               ],
@@ -158,41 +181,44 @@ export const CreateInvoiceDocumentSchema = Type.Object(
           },
         ],
         taxTotal: {
-          totalTaxAmount: 1.0,
+          totalTaxAmount: 2.5,
           taxSubtotals: [
             {
-              taxableAmount: 10.0,
-              taxAmount: 1.0,
+              taxableAmount: 25.0,
+              taxAmount: 2.5,
               taxCategoryCode: "01",
               percent: 10,
             },
           ],
         },
         legalMonetaryTotal: {
-          lineExtensionAmount: 10.0,
-          taxExclusiveAmount: 10.0,
-          taxInclusiveAmount: 11.0,
-          payableAmount: 11.0,
+          lineExtensionAmount: 25.0, // Sum of all line item subtotals
+          taxExclusiveAmount: 25.0, // Total amount excluding tax
+          taxInclusiveAmount: 27.5, // Total amount including tax
+          payableAmount: 27.5, // The final amount due
         },
       },
     ],
   }
 );
 
-export type CreateInvoiceDocument = Static<typeof CreateInvoiceDocumentSchema>;
+export type CreateDebitNoteDocument = Static<
+  typeof CreateDebitNoteDocumentSchema
+>;
 
-export const SubmitInvoiceDocumentsBodyScheme = Type.Object({
-  documents: Type.Array(CreateInvoiceDocumentSchema, { minItems: 1 }),
+export const SubmitDebitNoteDocumentsBodyScheme = Type.Object({
+  documents: Type.Array(CreateDebitNoteDocumentSchema, { minItems: 1 }),
 });
 
-export type SubmitInvoiceDocumentsBody = Static<
-  typeof SubmitInvoiceDocumentsBodyScheme
+export type SubmitDebitNoteDocumentsBody = Static<
+  typeof SubmitDebitNoteDocumentsBodyScheme
 >;
-export const SubmitInvoiceDocumentsQueryScheme = Type.Composite([
+
+export const SubmitDebitNoteDocumentsQueryScheme = Type.Composite([
   TaxpayerTINScheme,
   DryRunScheme,
 ]);
 
-export type SubmitInvoiceDocumentsQuery = Static<
-  typeof SubmitInvoiceDocumentsQueryScheme
+export type SubmitDebitNoteDocumentsQuery = Static<
+  typeof SubmitDebitNoteDocumentsQueryScheme
 >;

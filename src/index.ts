@@ -9,9 +9,13 @@ import { CONFIG } from "./config";
 
 async function startServer() {
   // Check for essential non-Redis environment variables first
-  if (!process.env.CLIENT_ID || !process.env.CLIENT_SECRET) {
+  if (
+    !process.env.CLIENT_ID ||
+    !process.env.CLIENT_SECRET ||
+    !process.env.GATEWAY_API_KEY
+  ) {
     console.error(
-      "CLIENT_ID and CLIENT_SECRET must be defined in the environment variables"
+      "CLIENT_ID, CLIENT_SECRET, and GATEWAY_API_KEY must be defined in the environment variables"
     );
     process.exit(1);
   }
@@ -59,6 +63,7 @@ Use this gateway to easily submit invoices, credit notes, or debit notes from an
 
   const app = new Elysia()
     .use(() => errorHandler)
+
     .use(
       swagger({
         path: "/docs/api",
@@ -73,12 +78,34 @@ Use this gateway to easily submit invoices, credit notes, or debit notes from an
             { name: "Submissions", description: "Submissions endpoints" },
             { name: "Taxpayers", description: "Taxpayers endpoints" },
           ],
+          components: {
+            securitySchemes: {
+              apiKeyAuth: {
+                type: "apiKey",
+                name: "X-API-KEY",
+                in: "header",
+              },
+            },
+          },
         },
         swaggerOptions: {
           defaultModelRendering: "model",
         },
       })
-    );
+    )
+    .onBeforeHandle(({ request, set }) => {
+      const apiKey = request.headers.get("X-API-KEY");
+      if (
+        !process.env.GATEWAY_API_KEY ||
+        apiKey !== process.env.GATEWAY_API_KEY
+      ) {
+        set.status = 401;
+        return {
+          error:
+            "Unauthorized: Invalid or missing API Key in X-API-Key header.",
+        };
+      }
+    });
 
   app.get(
     "/",

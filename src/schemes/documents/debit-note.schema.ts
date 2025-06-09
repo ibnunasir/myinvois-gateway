@@ -13,6 +13,7 @@ import {
   PaymentMeansSchema,
   PaymentTermsSchema,
   PrepaidPaymentSchema,
+  BillingReferenceSchema,
 } from "../common";
 import { type Static, Type } from "@sinclair/typebox";
 
@@ -71,20 +72,7 @@ export const CreateDebitNoteDocumentSchema = Type.Object(
           "Optional. If not provided, defaults to `documentCurrencyCode`",
       })
     ),
-    billingReference: Type.Object(
-      {
-        uuid: Type.String({
-          description: "LHDNM's unique identifier number for the invoice",
-        }),
-        internalId: Type.String({
-          description: "User's internal identifier for the invoice",
-        }),
-      },
-      {
-        description:
-          "Reference to the original invoice to which this debit note applies.",
-      }
-    ),
+    billingReferences: Type.Array(BillingReferenceSchema, { min: 1 }),
     supplier: SupplierSchema,
     customer: CustomerSchema,
     debitNoteLines: Type.Array(DebitNoteLineSchema, {
@@ -106,13 +94,6 @@ export const CreateDebitNoteDocumentSchema = Type.Object(
     paymentTerms: Type.Optional(Type.Array(PaymentTermsSchema)),
     prepaidPayments: Type.Optional(Type.Array(PrepaidPaymentSchema)),
     allowanceCharges: Type.Optional(AllowanceChargeScheme), // Document level allowance/charges
-    ublExtensions: Type.Optional(
-      Type.Object({
-        // TODO Define UBL extensions properties
-      })
-    ),
-    signatureId: Type.Optional(Type.String()),
-    signatureMethod: Type.Optional(Type.String()),
   },
   {
     examples: [
@@ -121,10 +102,12 @@ export const CreateDebitNoteDocumentSchema = Type.Object(
         issueDate: new Date().toISOString().split("T")[0],
         issueTime: new Date().toISOString().substring(11, 16) + ":00Z",
         documentCurrencyCode: "MYR",
-        billingReference: {
-          uuid: "4GP7CCS5FE74GBZ5QFD7EXWJ10",
-          internalId: "INV12345",
-        },
+        billingReferences: [
+          {
+            uuid: "4GP7CCS5FE74GBZ5QFD7EXWJ10", // LHDNM UUID of the original Invoice
+            internalId: "INV12345", // Internal ID of the original Invoice
+          },
+        ],
         supplier: {
           TIN: "C2584563222",
           legalName: "Test Supplier Sdn. Bhd.",

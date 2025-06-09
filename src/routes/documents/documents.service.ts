@@ -1,24 +1,30 @@
 import { CONFIG } from "src/config";
 // Assume you have a Redis client initialized and exported, e.g.:
-import { redisInstance } from "src/redis"; // Path to your gateway's Redis client instance
 import {
   type CreateInvoiceDocumentParams,
-  MyInvoisClient,
-  createDocumentSubmissionItemFromInvoice,
   type DocumentSubmissionItem,
+  type CreateCreditNoteDocumentParams,
+  MyInvoisClient,
+  createDocumentSubmissionItemFromCreditNote,
+  createDocumentSubmissionItemFromInvoice,
+  type SignatureParams,
 } from "myinvois-client";
+import { redisInstance } from "src/redis"; // Path to your gateway's Redis client instance
 import type {
-  GetRecentDocumentsRequestQuery,
-  SubmitInvoiceDocumentsBody,
-  SubmitInvoiceDocumentsQuery,
   CancelDocumentRequestParams,
   CancelDocumentRequestQuery,
+  GetDocumentDetailsRequestParams,
+  GetDocumentDetailsRequestQuery,
+  GetRecentDocumentsRequestQuery,
   RejectDocumentRequestParams,
   RejectDocumentRequestQuery,
   SearchDocumentsRequestQuery,
-  GetDocumentDetailsRequestParams,
-  GetDocumentDetailsRequestQuery,
+  SubmitCreditNoteDocumentsBody,
+  SubmitCreditNoteDocumentsQuery,
+  SubmitInvoiceDocumentsBody,
+  SubmitInvoiceDocumentsQuery,
 } from "src/schemes";
+import { getSignatureParams } from "src/utils/signature";
 
 export async function getRecentDocuments(
   query: GetRecentDocumentsRequestQuery
@@ -199,9 +205,56 @@ export async function submitInvoices(
   const taxpayerTIN = query.taxpayerTIN;
   const _documents = body.documents;
   try {
+    let signature: SignatureParams | undefined;
+    if (query.sign) {
+      signature = await getSignatureParams();
+    }
     const documents: DocumentSubmissionItem[] = _documents.map((doc) => {
+      if (signature) {
+        (doc as CreateInvoiceDocumentParams).signature = signature;
+      }
       return createDocumentSubmissionItemFromInvoice(
         doc as CreateInvoiceDocumentParams,
+        signature ? "1.1" : "1.0"
+      );
+    });
+
+    if (query.dryRun) return documents;
+    const result = await client.documents.submitDocuments(
+      { documents: documents },
+      taxpayerTIN
+    );
+    return result;
+  } catch (error) {
+    const action = taxpayerTIN
+      ? `submitting invoices for TIN ${taxpayerTIN}`
+      : "submitting invoices as taxpayer";
+    // console.error(`MyInvois Gateway: Error during ${action}:`, error);
+    throw new Error(
+      `Failed during ${action}. Original error: ${
+        error instanceof Error ? error.message : String(error)
+      }`
+    );
+  }
+}
+
+export async function submitCreditNotes(
+  query: SubmitCreditNoteDocumentsQuery,
+  body: SubmitCreditNoteDocumentsBody
+) {
+  const client = new MyInvoisClient(
+    CONFIG.clientId,
+    CONFIG.clientSecret,
+    CONFIG.env,
+    redisInstance
+  );
+
+  const taxpayerTIN = query.taxpayerTIN;
+  const _documents = body.documents;
+  try {
+    const documents: DocumentSubmissionItem[] = _documents.map((doc) => {
+      return createDocumentSubmissionItemFromCreditNote(
+        doc as CreateCreditNoteDocumentParams,
         "1.0"
       );
     });
@@ -214,8 +267,8 @@ export async function submitInvoices(
     return result;
   } catch (error) {
     const action = taxpayerTIN
-      ? `submitting documents for TIN ${taxpayerTIN}`
-      : "submitting documents as taxpayer";
+      ? `submitting invoices for TIN ${taxpayerTIN}`
+      : "submitting invoices as taxpayer";
     // console.error(`MyInvois Gateway: Error during ${action}:`, error);
     throw new Error(
       `Failed during ${action}. Original error: ${

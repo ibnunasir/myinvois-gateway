@@ -13,6 +13,7 @@ import {
   PaymentMeansSchema,
   PaymentTermsSchema,
   PrepaidPaymentSchema,
+  BillingReferenceSchema,
 } from "../common";
 import { type Static, Type } from "@sinclair/typebox";
 
@@ -72,21 +73,7 @@ export const CreateSelfBilledCreditNoteDocumentSchema = Type.Object(
           "Optional. If not provided, defaults to `documentCurrencyCode`",
       })
     ),
-    billingReference: Type.Object(
-      {
-        uuid: Type.String({
-          description:
-            "LHDNM's unique identifier number for the Self-Billed Invoice",
-        }),
-        internalId: Type.String({
-          description: "User's internal identifier for the Self-Billed Invoice",
-        }),
-      },
-      {
-        description:
-          "Reference(s) to the original Self-Billed Invoice to which this Self-Billed Credit Note applies.",
-      }
-    ),
+    billingReferences: Type.Array(BillingReferenceSchema, { min: 1 }),
     supplier: SupplierSchema, // Represents the Seller (Receiver of SBCN)
     customer: CustomerSchema, // Represents the Buyer (Issuer of SBCN)
     selfBilledCreditNoteLines: Type.Array(SelfBilledCreditNoteLineSchema, {
@@ -97,7 +84,6 @@ export const CreateSelfBilledCreditNoteDocumentSchema = Type.Object(
     taxTotal: TaxTotalSchema,
     legalMonetaryTotal: LegalMonetaryTotalSchema,
     creditNotePeriod: Type.Optional(
-      // Using creditNotePeriod as it's a credit note
       Type.Array(PeriodSchema, {
         description:
           "The period(s) to which the self-billed credit note applies, if applicable.",
@@ -110,13 +96,6 @@ export const CreateSelfBilledCreditNoteDocumentSchema = Type.Object(
     paymentTerms: Type.Optional(Type.Array(PaymentTermsSchema)),
     prepaidPayments: Type.Optional(Type.Array(PrepaidPaymentSchema)),
     allowanceCharges: Type.Optional(AllowanceChargeScheme), // Document level allowance/charges
-    ublExtensions: Type.Optional(
-      Type.Object({
-        // TODO Define UBL extensions properties
-      })
-    ),
-    signatureId: Type.Optional(Type.String()),
-    signatureMethod: Type.Optional(Type.String()),
   },
   {
     examples: [
@@ -125,10 +104,12 @@ export const CreateSelfBilledCreditNoteDocumentSchema = Type.Object(
         issueDate: new Date().toISOString().split("T")[0],
         issueTime: new Date().toISOString().substring(11, 16) + ":00Z",
         documentCurrencyCode: "MYR",
-        billingReference: {
-          uuid: "SBI001-LHDNM-UUID", // LHDNM UUID of the Self-Billed Invoice
-          internalId: "SBI001", // Internal ID of the Self-Billed Invoice
-        },
+        billingReferences: [
+          {
+            uuid: "SBI001-LHDNM-UUID", // LHDNM UUID of the Self-Billed Invoice
+            internalId: "SBI001", // Internal ID of the Self-Billed Invoice
+          },
+        ],
         supplier: {
           // Example Seller (Receiver of SBCN) data - same as SBI Seller
           TIN: "S1234567890",

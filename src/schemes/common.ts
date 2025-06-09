@@ -13,6 +13,15 @@ export const DryRunScheme = Type.Object({
   ),
 });
 
+export const SignScheme = Type.Object({
+  sign: Type.Optional(
+    Type.Boolean({
+      default: false,
+      description:
+        "Option to digitally sign the document. If set to `true`, ensures that the document is digitally signed before sending. Default is `false`.",
+    })
+  ),
+});
 export const TaxpayerTINScheme = Type.Object({
   taxpayerTIN: Type.Optional(
     Type.String({
@@ -406,23 +415,6 @@ export const PrepaidPaymentSchema = Type.Object({
   ),
 });
 
-export const DeliverySchema = Type.Object({
-  partyName: Type.Optional(
-    Type.String({
-      description:
-        "Name of the party involved in the delivery. Optional. E.g., 'Greenz Sdn. Bhd.'.",
-    })
-  ),
-  address: Type.Optional(AddressSchema),
-  shipmentId: Type.Optional(
-    Type.String({
-      description:
-        "Shipment identifier related to the original invoice or return.",
-    })
-  ),
-  // Add other fields like ActualDeliveryDate, ActualDeliveryTime if needed
-});
-
 export const AdditionalDocRefSchema = Type.Object({
   id: Type.String({
     description: "Identifier of the referenced document.",
@@ -439,3 +431,62 @@ export const AdditionalDocRefSchema = Type.Object({
   ),
   // Add other fields like Attachment (for embedded documents) if needed
 });
+
+export const SignatureScheme = Type.Object(
+  {
+    documentToSign: Type.Any({
+      description:
+        "The main UBL document object (e.g., Invoice, CreditNote JSON object) that needs to be signed. This document will be processed (minified, parts excluded) to generate the document digest.",
+    }),
+    privateKey: Type.Any({
+      description:
+        "The signer's private key as a CryptoKey object, used for signing the document digest.",
+    }),
+    signingCertificateBase64: Type.String({
+      description:
+        "The signer's X.509 certificate, base64 encoded. This certificate is included in the signature.",
+    }),
+    certificateDigestBase64: Type.String({
+      description:
+        'Base64 encoded SHA-256 digest of the signing certificate (also known as "CertDigest"). This is required for the XAdES properties within the signature.',
+    }),
+    certificateIssuerName: Type.String({
+      description: "Issuer name extracted from the signing certificate.",
+    }),
+    certificateSerialNumber: Type.String({
+      description: "Serial number extracted from the signing certificate.",
+    }),
+    extensionUri: Type.Optional(
+      Type.String({
+        description:
+          'URI for the UBL extension that identifies the type of extension. For enveloped XAdES signatures, this is typically "urn:oasis:names:specification:ubl:dsig:enveloped:xades".',
+        default: "urn:oasis:names:specification:ubl:dsig:enveloped:xades",
+      })
+    ),
+    signatureInformationId: Type.Optional(
+      Type.String({
+        description:
+          'ID for the SignatureInformation block within the UBLExtensions. Example: "urn:oasis:names:specification:ubl:signature:1"',
+        default: "urn:oasis:names:specification:ubl:signature:1",
+      })
+    ),
+    signatureId: Type.Optional(
+      Type.String({
+        description:
+          'This ID should match the ID of the <cac:Signature> element in the main UBL document (e.g., Invoice.Signature[0].ID[0]._). It links the extension to that specific signature placeholder. Example: "urn:oasis:names:specification:ubl:signature:Invoice" for an Invoice document.',
+        default: "urn:oasis:names:specification:ubl:signature:Invoice",
+      })
+    ),
+    documentTransformationKeys: Type.Optional(
+      Type.Array(Type.String(), {
+        description:
+          'An array of top-level keys to exclude from the `documentToSign` object before generating its digest. These keys typically include "UBLExtensions" and "Signature" itself.',
+        default: ["UBLExtensions", "Signature"],
+      })
+    ),
+  },
+  {
+    description:
+      "Parameters for building the UBL Extensions, specifically for embedding a digital signature. This scheme collects the necessary data to generate the <UBLExtensions> block containing the digital signature information as per MyInvois requirements.",
+  }
+);

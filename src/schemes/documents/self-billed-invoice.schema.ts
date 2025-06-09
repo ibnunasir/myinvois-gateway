@@ -1,21 +1,20 @@
+import { type Static, Type } from "@sinclair/typebox";
 import {
-  CustomerSchema, // Represents the Buyer (Issuer of Self-Billed Invoice)
+  AdditionalDocRefSchema,
+  AllowanceChargeScheme,
+  CustomerSchema,
+  DryRunScheme,
+  ItemCommodityClassificationSchema,
+  LegalMonetaryTotalSchema,
+  LineTaxTotalSchema,
+  PaymentMeansSchema,
+  PaymentTermsSchema,
+  PeriodSchema,
+  PrepaidPaymentSchema, // Represents the Buyer (Issuer of Self-Billed Invoice)
   SupplierSchema, // Represents the Seller (Receiver of Self-Billed Invoice)
   TaxpayerTINScheme,
   TaxTotalSchema,
-  LineTaxTotalSchema,
-  PeriodSchema,
-  LegalMonetaryTotalSchema,
-  ItemCommodityClassificationSchema,
-  AllowanceChargeScheme,
-  DryRunScheme,
-  PaymentMeansSchema,
-  AdditionalDocRefSchema,
-  PaymentTermsSchema,
-  PrepaidPaymentSchema,
-  BillingReferenceSchema, // Referencing documents like Purchase Orders
 } from "../common";
-import { type Static, Type } from "@sinclair/typebox";
 
 const SelfBilledInvoiceLineSchema = Type.Object({
   id: Type.String({
@@ -74,14 +73,6 @@ export const CreateSelfBilledInvoiceDocumentSchema = Type.Object(
           "Optional. If not provided, defaults to `documentCurrencyCode`",
       })
     ),
-    billingReference: Type.Array(
-      BillingReferenceSchema, // Self-Billed Invoice often references POs or Delivery Notes
-      {
-        description:
-          "Reference to the original document(s) (e.g., Purchase Order, Delivery Note) to which this self-billed invoice applies.",
-        minItems: 1, // Assuming at least one reference is usually required for self-billing
-      }
-    ),
     supplier: SupplierSchema, // Represents the Seller (Receiver)
     customer: CustomerSchema, // Represents the Buyer (Issuer)
     selfBilledInvoiceLines: Type.Array(SelfBilledInvoiceLineSchema, {
@@ -104,13 +95,6 @@ export const CreateSelfBilledInvoiceDocumentSchema = Type.Object(
     paymentTerms: Type.Optional(Type.Array(PaymentTermsSchema)),
     prepaidPayments: Type.Optional(Type.Array(PrepaidPaymentSchema)),
     allowanceCharges: Type.Optional(AllowanceChargeScheme), // Document level allowance/charges
-    ublExtensions: Type.Optional(
-      Type.Object({
-        // TODO Define UBL extensions properties
-      })
-    ),
-    signatureId: Type.Optional(Type.String()),
-    signatureMethod: Type.Optional(Type.String()),
   },
   {
     examples: [
@@ -119,15 +103,7 @@ export const CreateSelfBilledInvoiceDocumentSchema = Type.Object(
         issueDate: new Date().toISOString().split("T")[0],
         issueTime: new Date().toISOString().substring(11, 16) + ":00Z",
         documentCurrencyCode: "MYR",
-        billingReference: [
-          // Example billing reference
-          {
-            uuid: "PO12345-LHDNM-UUID", // LHDNM UUID of the Purchase Order or Delivery Note
-            internalId: "PO12345", // Internal ID of the Purchase Order
-          },
-        ],
         supplier: {
-          // Example Seller (Receiver of SBI) data
           TIN: "S1234567890",
           legalName: "Seller Company Sdn. Bhd.",
           identificationNumber: "201501012345",

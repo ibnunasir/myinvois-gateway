@@ -13,6 +13,7 @@ import {
   AdditionalDocRefSchema,
   PaymentTermsSchema,
   PrepaidPaymentSchema,
+  SignScheme,
 } from "../common";
 import { type Static, Type } from "@sinclair/typebox";
 
@@ -87,13 +88,6 @@ export const CreateInvoiceDocumentSchema = Type.Object(
     paymentTerms: Type.Optional(Type.Array(PaymentTermsSchema)),
     prepaidPayments: Type.Optional(Type.Array(PrepaidPaymentSchema)),
     allowanceCharges: Type.Optional(AllowanceChargeScheme),
-    ublExtensions: Type.Optional(
-      Type.Object({
-        // TODO Define UBL extensions properties
-      })
-    ),
-    signatureId: Type.Optional(Type.String()),
-    signatureMethod: Type.Optional(Type.String()),
   },
   {
     examples: [
@@ -191,6 +185,7 @@ export type SubmitInvoiceDocumentsBody = Static<
 export const SubmitInvoiceDocumentsQueryScheme = Type.Composite([
   TaxpayerTINScheme,
   DryRunScheme,
+  SignScheme,
 ]);
 
 export type SubmitInvoiceDocumentsQuery = Static<

@@ -13,6 +13,7 @@ import {
   PaymentMeansSchema,
   PaymentTermsSchema,
   PrepaidPaymentSchema,
+  BillingReferenceSchema,
 } from "../common";
 import { type Static, Type } from "@sinclair/typebox";
 
@@ -74,22 +75,7 @@ export const CreateSelfBilledRefundNoteDocumentSchema = Type.Object(
           "Optional. If not provided, defaults to `documentCurrencyCode`",
       })
     ),
-    billingReference: Type.Object(
-      // Adapted to reference Self-Billed Invoice
-      {
-        uuid: Type.String({
-          description:
-            "LHDNM's unique identifier number for the Self-Billed Invoice",
-        }),
-        internalId: Type.String({
-          description: "User's internal identifier for the Self-Billed Invoice",
-        }),
-      },
-      {
-        description:
-          "Reference(s) to the original Self-Billed Invoice to which this Self-Billed Refund Note applies.",
-      }
-    ),
+    billingReferences: Type.Array(BillingReferenceSchema, { min: 1 }),
     supplier: SupplierSchema, // Represents the Seller (Receiver of SBRN - issued refund)
     customer: CustomerSchema, // Represents the Buyer (Issuer of SBRN - received refund)
     selfBilledRefundNoteLines: Type.Array(SelfBilledRefundNoteLineSchema, {
@@ -112,13 +98,6 @@ export const CreateSelfBilledRefundNoteDocumentSchema = Type.Object(
     paymentTerms: Type.Optional(Type.Array(PaymentTermsSchema)),
     prepaidPayments: Type.Optional(Type.Array(PrepaidPaymentSchema)), // Useful for refund payment details
     allowanceCharges: Type.Optional(AllowanceChargeScheme), // Document level allowance/charges
-    ublExtensions: Type.Optional(
-      Type.Object({
-        // TODO Define UBL extensions properties
-      })
-    ),
-    signatureId: Type.Optional(Type.String()),
-    signatureMethod: Type.Optional(Type.String()),
   },
   {
     examples: [
@@ -128,10 +107,12 @@ export const CreateSelfBilledRefundNoteDocumentSchema = Type.Object(
         issueDate: new Date().toISOString().split("T")[0],
         issueTime: new Date().toISOString().substring(11, 16) + ":00Z",
         documentCurrencyCode: "MYR",
-        billingReference: {
-          uuid: "SBI001-LHDNM-UUID", // LHDNM UUID of the original Self-Billed Invoice
-          internalId: "SBI001", // Internal ID of the original Self-Billed Invoice
-        },
+        billingReferences: [
+          {
+            uuid: "SBI001-LHDNM-UUID", // LHDNM UUID of the original Self-Billed Invoice
+            internalId: "SBI001", // Internal ID of the original Self-Billed Invoice
+          },
+        ],
         supplier: {
           // Example Seller (Receiver of SBRN) data - same as SBI Seller
           TIN: "S1234567890",

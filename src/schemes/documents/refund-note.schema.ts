@@ -13,6 +13,7 @@ import {
   PaymentMeansSchema,
   PaymentTermsSchema,
   PrepaidPaymentSchema,
+  BillingReferenceSchema,
 } from "../common";
 import { type Static, Type } from "@sinclair/typebox";
 
@@ -71,21 +72,7 @@ export const CreateRefundNoteDocumentSchema = Type.Object(
           "Optional. If not provided, defaults to `documentCurrencyCode`",
       })
     ),
-    billingReference: Type.Object(
-      {
-        uuid: Type.String({
-          description:
-            "LHDNM's unique identifier number for the referenced document",
-        }),
-        internalId: Type.String({
-          description: "User's internal identifier for the referenced document",
-        }),
-      },
-      {
-        description:
-          "Reference to the original document (e.g., invoice or credit note) to which this refund note applies.",
-      }
-    ),
+    billingReferences: Type.Array(BillingReferenceSchema, { min: 1 }),
     supplier: SupplierSchema,
     customer: CustomerSchema,
     refundNoteLines: Type.Array(RefundNoteLineSchema, {
@@ -107,13 +94,6 @@ export const CreateRefundNoteDocumentSchema = Type.Object(
     paymentTerms: Type.Optional(Type.Array(PaymentTermsSchema)),
     prepaidPayments: Type.Optional(Type.Array(PrepaidPaymentSchema)),
     allowanceCharges: Type.Optional(AllowanceChargeScheme), // Document level allowance/charges
-    ublExtensions: Type.Optional(
-      Type.Object({
-        // TODO Define UBL extensions properties
-      })
-    ),
-    signatureId: Type.Optional(Type.String()),
-    signatureMethod: Type.Optional(Type.String()),
   },
   {
     examples: [
@@ -122,10 +102,12 @@ export const CreateRefundNoteDocumentSchema = Type.Object(
         issueDate: new Date().toISOString().split("T")[0],
         issueTime: new Date().toISOString().substring(11, 16) + ":00Z",
         documentCurrencyCode: "MYR",
-        billingReference: {
-          uuid: "PREVIOUS_DOC_LHDNM_UUID", // Replace with actual UUID of referenced document
-          internalId: "PREVIOUS_DOC_INTERNAL_ID", // Replace with actual internal ID
-        },
+        billingReferences: [
+          {
+            uuid: "PREVIOUS_DOC_LHDNM_UUID", // LHDNM UUID of the original Invoice
+            internalId: "PREVIOUS_DOC_INTERNAL_ID", // Internal ID of the original Invoice
+          },
+        ],
         supplier: {
           // Example supplier data
           TIN: "C2584563222",

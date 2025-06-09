@@ -9,6 +9,7 @@ services:
       ENVIRONMENT: ${ENVIRONMENT}
       CLIENT_ID: ${CLIENT_ID}
       CLIENT_SECRET: ${CLIENT_SECRET}
+      GATEWAY_API_KEY: ${GATEWAY_API_KEY}
       REDIS_URL: redis://redis:6379
     depends_on:
       - redis

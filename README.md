@@ -53,7 +53,10 @@ CLIENT_ID=your_client_id_here
 CLIENT_SECRET=your_client_secret_here
 # GATEWAY_API_KEY=your_gateway_api_key_here # Optional: Define to secure the gateway. If omitted, the gateway will be unprotected.
 # REDIS_URL=redis://localhost:6379 # Optional: for local Bun development if using local Redis
-```
+
+# Required for document signing (e-Invoice v1.1)
+# SIGNING_PRIVATE_KEY_PEM="-----BEGIN PRIVATE KEY-----\n# ... your PKCS#8 private key base64 content ...\n# -----END PRIVATE KEY-----"
+# SIGNING_CERTIFICATE_BASE64="your_certificate_raw_der_base64_content"
 
 This `.env` file will be automatically used by `bun run dev`, when running the compiled binary locally (if your application loads it, typically via a library like `dotenv` which Bun might handle implicitly for `process.env`), and by Docker Compose if it's in the same directory.
 

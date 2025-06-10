@@ -258,6 +258,8 @@ Once the application is running, API documentation (Swagger UI) can be accessed 
 
 `http://localhost:3000/docs/api`
 
+![2025-06-10_18-43](https://github.com/user-attachments/assets/de187a81-d409-4980-a88b-13e4e3d35f51)
+
 ### API Key Security and Usage
 
 The `GATEWAY_API_KEY` is **optional**. If you choose to set one, it is used to protect your MyInvois Gateway instance from unauthorized access. If it's not set, the gateway will operate without API key authentication. **This is not recommended for production environments unless access is strictly controlled by other means (e.g., firewall, VPC).**

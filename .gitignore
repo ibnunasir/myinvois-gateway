@@ -43,3 +43,4 @@ package-lock.json
 /generated/prisma
 .env
 bin
+certs

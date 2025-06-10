@@ -1,55 +1,24 @@
+import { type Static, Type } from "@sinclair/typebox";
 import {
-  CustomerSchema, // Represents the Buyer (Issuer of Self-Billed Debit Note)
-  SupplierSchema, // Represents the Seller (Receiver of Self-Billed Debit Note)
-  TaxpayerTINScheme,
-  TaxTotalSchema,
-  LineTaxTotalSchema,
-  PeriodSchema,
-  LegalMonetaryTotalSchema,
-  ItemCommodityClassificationSchema,
-  AllowanceChargeScheme,
-  DryRunScheme,
   AdditionalDocRefSchema,
+  AllowanceChargeScheme,
+  BillingReferenceSchema,
+  CommonInvoiceLineSchema,
+  CustomerSchema,
+  DryRunScheme,
+  LegalMonetaryTotalSchema,
   PaymentMeansSchema,
   PaymentTermsSchema,
+  PeriodSchema,
   PrepaidPaymentSchema,
-  BillingReferenceSchema,
+  SignScheme,
+  SupplierSchema,
+  TaxpayerTINScheme,
+  TaxTotalSchema,
 } from "../common";
-import { type Static, Type } from "@sinclair/typebox";
 
-// Self-Billed Debit Note Line Schema - Adapted from DebitNoteLineSchema
-const SelfBilledDebitNoteLineSchema = Type.Object({
-  id: Type.String({
-    description:
-      "Unique identifier for the self-billed debit note line (e.g., item number “1”, “2”, etc.).",
-  }),
-  quantity: Type.Number({
-    description:
-      "Number of units of the product or service being debited in the self-billed context. E.g., 1.00.",
-  }),
-  unitPrice: Type.Number({
-    description: "Unit price of the product or service being debited.",
-  }),
-  subtotal: Type.Number({
-    description:
-      "Subtotal for the line item being debited: Amount of each individual item/service, excluding taxes, charges, or discounts. Quantity * unit price.",
-  }),
-  unitCode: Type.Optional(
-    Type.String({
-      description:
-        "Standard unit or system used to measure the product or service (UN/ECE Recommendation 20). E.g., 'KGM' for kilograms, 'XUN' for unit. https://sdk.myinvois.hasil.gov.my/codes/unit-types/",
-    })
-  ),
-  itemDescription: Type.String({
-    description:
-      "Description of the product or service being debited. E.g., 'Correction for understated quantity'.",
-  }),
-  itemCommodityClassification: ItemCommodityClassificationSchema,
-  lineTaxTotal: Type.Optional(LineTaxTotalSchema),
-  allowanceCharges: Type.Optional(AllowanceChargeScheme),
-});
+const SelfBilledDebitNoteLineSchema = CommonInvoiceLineSchema;
 
-// Create Self-Billed Debit Note Document Schema - Adapted from CreateDebitNoteDocumentSchema and CreateSelfBilledCreditNoteDocumentSchema
 export const CreateSelfBilledDebitNoteDocumentSchema = Type.Object(
   {
     id: Type.String({
@@ -78,7 +47,7 @@ export const CreateSelfBilledDebitNoteDocumentSchema = Type.Object(
     billingReferences: Type.Array(BillingReferenceSchema, { min: 1 }),
     supplier: SupplierSchema, // Represents the Seller (Receiver of SBDN) - same as SBI Seller
     customer: CustomerSchema, // Represents the Buyer (Issuer of SBDN) - same as SBI Buyer
-    selfBilledDebitNoteLines: Type.Array(SelfBilledDebitNoteLineSchema, {
+    invoiceLines: Type.Array(SelfBilledDebitNoteLineSchema, {
       description:
         "List of items being debited, at least one item is required.",
       minItems: 1,
@@ -101,7 +70,6 @@ export const CreateSelfBilledDebitNoteDocumentSchema = Type.Object(
   },
   {
     examples: [
-      // Adapted example
       {
         id: "SBDN001",
         issueDate: new Date().toISOString().split("T")[0],
@@ -146,7 +114,7 @@ export const CreateSelfBilledDebitNoteDocumentSchema = Type.Object(
             countryCode: "MYS",
           },
         },
-        selfBilledDebitNoteLines: [
+        invoiceLines: [
           {
             id: "1",
             quantity: 2, // Debiting 2 additional units
@@ -213,6 +181,7 @@ export type SubmitSelfBilledDebitNoteDocumentsBody = Static<
 export const SubmitSelfBilledDebitNoteDocumentsQueryScheme = Type.Composite([
   TaxpayerTINScheme, // Taxpayer TIN of the issuer (Buyer)
   DryRunScheme,
+  SignScheme,
 ]);
 
 export type SubmitSelfBilledDebitNoteDocumentsQuery = Static<

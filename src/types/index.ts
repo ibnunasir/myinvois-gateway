@@ -40,6 +40,7 @@ export const ErrorResponseSchema = t.Object({
   status: t.Integer(),
   code: t.String(),
   message: t.Optional(t.String()),
+  error: t.Optional(t.Any()),
 });
 
 export type ErrorResponse = Static<typeof ErrorResponseSchema>;

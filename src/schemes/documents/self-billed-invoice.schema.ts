@@ -10,8 +10,9 @@ import {
   PaymentMeansSchema,
   PaymentTermsSchema,
   PeriodSchema,
-  PrepaidPaymentSchema, // Represents the Buyer (Issuer of Self-Billed Invoice)
-  SupplierSchema, // Represents the Seller (Receiver of Self-Billed Invoice)
+  PrepaidPaymentSchema,
+  SignScheme,
+  SupplierSchema,
   TaxpayerTINScheme,
   TaxTotalSchema,
 } from "../common";
@@ -75,7 +76,7 @@ export const CreateSelfBilledInvoiceDocumentSchema = Type.Object(
     ),
     supplier: SupplierSchema, // Represents the Seller (Receiver)
     customer: CustomerSchema, // Represents the Buyer (Issuer)
-    selfBilledInvoiceLines: Type.Array(SelfBilledInvoiceLineSchema, {
+    invoiceLines: Type.Array(SelfBilledInvoiceLineSchema, {
       description: "List of items purchased, at least one item is required.",
       minItems: 1,
     }),
@@ -135,7 +136,7 @@ export const CreateSelfBilledInvoiceDocumentSchema = Type.Object(
             countryCode: "MYS",
           },
         },
-        selfBilledInvoiceLines: [
+        invoiceLines: [
           {
             id: "1",
             quantity: 100,
@@ -200,6 +201,7 @@ export type SubmitSelfBilledInvoiceDocumentsBody = Static<
 export const SubmitSelfBilledInvoiceDocumentsQueryScheme = Type.Composite([
   TaxpayerTINScheme, // Taxpayer TIN of the issuer (Buyer)
   DryRunScheme,
+  SignScheme,
 ]);
 
 export type SubmitSelfBilledInvoiceDocumentsQuery = Static<

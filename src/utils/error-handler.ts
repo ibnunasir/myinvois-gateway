@@ -12,6 +12,24 @@ import {
   UnauthorizedError,
 } from "src/types";
 
+export class MyGatewayError extends Error {
+  error?: any;
+
+  constructor(message: string, errorObj?: any) {
+    super(message);
+    this.name = "GatewayError";
+    this.error = errorObj;
+  }
+}
+
+export class MyInvoisError extends MyGatewayError {
+  constructor(message: string, errorObj?: any) {
+    super(message);
+    this.name = "MyInvoisError";
+    this.error = errorObj;
+  }
+}
+
 function findDeepestError(error: any): any {
   // Dive into nested union errors if available
   if (error.errors && Array.isArray(error.errors)) {
@@ -29,6 +47,7 @@ export const errorHandler = new Elysia().onError((ctx) => {
   let message: string = "Internal Server Error";
   let status: number = 500; // Default status code
   let code: string = "INTERNAL_SERVER_ERROR"; // Default code
+  let _error;
 
   if (error instanceof ValidationError) {
     message = error.message;
@@ -75,6 +94,11 @@ export const errorHandler = new Elysia().onError((ctx) => {
     message = error.message;
     status = 400;
     code = "BAD_REQUEST";
+  } else if (error instanceof MyInvoisError) {
+    message = error.message;
+    status = 500;
+    code = "MYINVOIS_ERROR";
+    _error = error.error;
   } else if (error instanceof Error) {
     message = error.message;
     status = 500;
@@ -91,6 +115,7 @@ export const errorHandler = new Elysia().onError((ctx) => {
     message: message,
     status: status,
     code: code,
+    error: _error,
   };
 
   return response;

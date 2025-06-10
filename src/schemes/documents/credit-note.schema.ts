@@ -1,52 +1,23 @@
+import { type Static, Type } from "@sinclair/typebox";
 import {
+  AdditionalDocRefSchema,
+  AllowanceChargeScheme,
+  BillingReferenceSchema,
   CustomerSchema,
+  DryRunScheme,
+  CommonInvoiceLineSchema,
+  LegalMonetaryTotalSchema,
+  PaymentMeansSchema,
+  PaymentTermsSchema,
+  PeriodSchema,
+  PrepaidPaymentSchema,
+  SignScheme,
   SupplierSchema,
   TaxpayerTINScheme,
   TaxTotalSchema,
-  LineTaxTotalSchema,
-  PeriodSchema,
-  LegalMonetaryTotalSchema,
-  ItemCommodityClassificationSchema,
-  AllowanceChargeScheme,
-  DryRunScheme,
-  AdditionalDocRefSchema,
-  PaymentMeansSchema,
-  PaymentTermsSchema,
-  PrepaidPaymentSchema,
-  BillingReferenceSchema,
 } from "../common";
-import { type Static, Type } from "@sinclair/typebox";
 
-const CreditNoteLineSchema = Type.Object({
-  id: Type.String({
-    description:
-      "Unique identifier for the credit note line (e.g., item number “1”, “2”, etc.).",
-  }),
-  quantity: Type.Number({
-    description:
-      "Number of units of the product or service being credited. E.g., 1.00.",
-  }),
-  unitPrice: Type.Number({
-    description: "Unit price of the product or service being credited.",
-  }),
-  subtotal: Type.Number({
-    description:
-      "Subtotal for the line item being credited: Amount of each individual item/service, excluding taxes, charges, or discounts. Quantity * unit price.",
-  }),
-  unitCode: Type.Optional(
-    Type.String({
-      description:
-        "Standard unit or system used to measure the product or service (UN/ECE Recommendation 20). E.g., 'KGM' for kilograms, 'XUN' for unit. https://sdk.myinvois.hasil.gov.my/codes/unit-types/",
-    })
-  ),
-  itemDescription: Type.String({
-    description:
-      "Description of the product or service being credited. E.g., 'Return of Laptop Peripherals'.",
-  }),
-  itemCommodityClassification: ItemCommodityClassificationSchema,
-  lineTaxTotal: Type.Optional(LineTaxTotalSchema),
-  allowanceCharges: Type.Optional(AllowanceChargeScheme),
-});
+const CreditNoteLineSchema = CommonInvoiceLineSchema;
 
 export const CreateCreditNoteDocumentSchema = Type.Object(
   {
@@ -75,7 +46,7 @@ export const CreateCreditNoteDocumentSchema = Type.Object(
     billingReferences: Type.Array(BillingReferenceSchema, { min: 1 }),
     supplier: SupplierSchema,
     customer: CustomerSchema,
-    creditNoteLines: Type.Array(CreditNoteLineSchema, {
+    invoiceLines: Type.Array(CreditNoteLineSchema, {
       description: "List of credit note items, at least one item is required.",
       minItems: 1,
     }),
@@ -138,7 +109,7 @@ export const CreateCreditNoteDocumentSchema = Type.Object(
             countryCode: "MYS",
           },
         },
-        creditNoteLines: [
+        invoiceLines: [
           {
             id: "1",
             quantity: 1,
@@ -200,6 +171,7 @@ export type SubmitCreditNoteDocumentsBody = Static<
 export const SubmitCreditNoteDocumentsQueryScheme = Type.Composite([
   TaxpayerTINScheme,
   DryRunScheme,
+  SignScheme,
 ]);
 
 export type SubmitCreditNoteDocumentsQuery = Static<

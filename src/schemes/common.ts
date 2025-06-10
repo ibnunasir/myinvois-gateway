@@ -490,3 +490,32 @@ export const SignatureScheme = Type.Object(
       "Parameters for building the UBL Extensions, specifically for embedding a digital signature. This scheme collects the necessary data to generate the <UBLExtensions> block containing the digital signature information as per MyInvois requirements.",
   }
 );
+
+export const CommonInvoiceLineSchema = Type.Object({
+  id: Type.String({
+    description:
+      "Unique identifier for the invoice line (e.g., item number “1”, “2”, etc.).",
+  }),
+  quantity: Type.Number({
+    description: "Number of units of the product or service. E.g., 1.00.",
+  }),
+  unitPrice: Type.Number(),
+  subtotal: Type.Number({
+    description:
+      "Subtotal for the line item: Amount of each individual item/service, excluding taxes, charges, or discounts. Quantity * unit price ",
+  }),
+  unitCode: Type.Optional(
+    Type.String({
+      description:
+        "Standard unit or system used to measure the product or service (UN/ECE Recommendation 20). E.g., 'KGM' for kilograms, 'XUN' for unit. https://sdk.myinvois.hasil.gov.my/codes/unit-types/",
+    })
+  ),
+  itemDescription: Type.String({
+    description:
+      "Description of the product or service. E.g., 'Laptop Peripherals'.",
+  }),
+  itemCommodityClassification: ItemCommodityClassificationSchema,
+
+  lineTaxTotal: Type.Optional(LineTaxTotalSchema),
+  allowanceCharges: Type.Optional(AllowanceChargeScheme),
+});

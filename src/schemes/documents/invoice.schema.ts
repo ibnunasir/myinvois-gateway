@@ -1,50 +1,22 @@
+import { type Static, Type } from "@sinclair/typebox";
 import {
+  AdditionalDocRefSchema,
+  AllowanceChargeScheme,
+  CommonInvoiceLineSchema,
   CustomerSchema,
+  DryRunScheme,
+  LegalMonetaryTotalSchema,
+  PaymentMeansSchema,
+  PaymentTermsSchema,
+  PeriodSchema,
+  PrepaidPaymentSchema,
+  SignScheme,
   SupplierSchema,
   TaxpayerTINScheme,
   TaxTotalSchema,
-  LineTaxTotalSchema,
-  PeriodSchema,
-  LegalMonetaryTotalSchema,
-  ItemCommodityClassificationSchema,
-  AllowanceChargeScheme,
-  DryRunScheme,
-  PaymentMeansSchema,
-  AdditionalDocRefSchema,
-  PaymentTermsSchema,
-  PrepaidPaymentSchema,
-  SignScheme,
 } from "../common";
-import { type Static, Type } from "@sinclair/typebox";
 
-const InvoiceLineSchema = Type.Object({
-  id: Type.String({
-    description:
-      "Unique identifier for the invoice line (e.g., item number “1”, “2”, etc.).",
-  }),
-  quantity: Type.Number({
-    description: " Number of units of the product or service. E.g., 1.00.",
-  }),
-  unitPrice: Type.Number(),
-  subtotal: Type.Number({
-    description:
-      "Subtotal for the line item: Amount of each individual item/service, excluding taxes, charges, or discounts. Quantity * unit price ",
-  }),
-  unitCode: Type.Optional(
-    Type.String({
-      description:
-        "Standard unit or system used to measure the product or service (UN/ECE Recommendation 20). E.g., 'KGM' for kilograms, 'XUN' for unit. https://sdk.myinvois.hasil.gov.my/codes/unit-types/",
-    })
-  ),
-  itemDescription: Type.String({
-    description:
-      "Description of the product or service. E.g., 'Laptop Peripherals'.",
-  }),
-  itemCommodityClassification: ItemCommodityClassificationSchema,
-
-  lineTaxTotal: Type.Optional(LineTaxTotalSchema),
-  allowanceCharges: Type.Optional(AllowanceChargeScheme),
-});
+const InvoiceLineScheme = CommonInvoiceLineSchema;
 
 export const CreateInvoiceDocumentSchema = Type.Object(
   {
@@ -69,7 +41,7 @@ export const CreateInvoiceDocumentSchema = Type.Object(
     ),
     supplier: SupplierSchema,
     customer: CustomerSchema,
-    invoiceLines: Type.Array(InvoiceLineSchema, {
+    invoiceLines: Type.Array(InvoiceLineScheme, {
       description: "List of invoice items, at least one item is required",
       minItems: 1,
     }),

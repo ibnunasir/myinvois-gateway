@@ -6,6 +6,13 @@ import {
   rejectDocument,
   searchDocuments,
   getDocumentDetails,
+  submitCreditNotes,
+  submitDebitNotes,
+  submitRefundNotes,
+  submitSelfBilledInvoices,
+  submitSelfBilledCreditNotes,
+  submitSelfBilledDebitNotes,
+  submitSelfBilledRefundNotes,
 } from "./documents.service";
 import {
   GetRecentDocumentsRequestQueryScheme,
@@ -19,6 +26,20 @@ import {
   SearchDocumentsRequestQuerySchema,
   GetDocumentDetailsRequestParamsSchema,
   GetDocumentDetailsRequestQuerySchema,
+  SubmitCreditNoteDocumentsBodyScheme,
+  SubmitCreditNoteDocumentsQueryScheme,
+  SubmitDebitNoteDocumentsBodyScheme,
+  SubmitDebitNoteDocumentsQueryScheme,
+  SubmitRefundNoteDocumentsBodyScheme,
+  SubmitRefundNoteDocumentsQueryScheme,
+  SubmitSelfBilledCreditNoteDocumentsBodyScheme,
+  SubmitSelfBilledCreditNoteDocumentsQueryScheme,
+  SubmitSelfBilledDebitNoteDocumentsBodyScheme,
+  SubmitSelfBilledDebitNoteDocumentsQueryScheme,
+  SubmitSelfBilledInvoiceDocumentsBodyScheme,
+  SubmitSelfBilledInvoiceDocumentsQueryScheme,
+  SubmitSelfBilledRefundNoteDocumentsBodyScheme,
+  SubmitSelfBilledRefundNoteDocumentsQueryScheme,
 } from "src/schemes";
 
 export const documentsController = (app: Elysia) => {
@@ -46,21 +67,7 @@ export const documentsController = (app: Elysia) => {
           response: GetRecentDocumentsResponseSchema,
         }
       )
-      .post(
-        "submit/invoice",
-        ({ query, body }) => {
-          return submitInvoices(query, body);
-        },
-        {
-          detail: {
-            summary: "Submit Invoices",
-            description: `This API allows taxpayer to submit one or more invoices to
-            MyInvois System.`,
-          },
-          query: SubmitInvoiceDocumentsQueryScheme,
-          body: SubmitInvoiceDocumentsBodyScheme,
-        }
-      )
+
       .put(
         "/:id/cancel",
         ({ params, query }) => {
@@ -125,6 +132,126 @@ export const documentsController = (app: Elysia) => {
           },
           query: SearchDocumentsRequestQuerySchema, // Added query schema
           // response: GetRecentDocumentsResponseSchema, // Response schema can be added if defined
+        }
+      )
+      .post(
+        "submit/invoice",
+        ({ query, body }) => {
+          return submitInvoices(query, body);
+        },
+        {
+          detail: {
+            summary: "Submit Invoices",
+            description: `This API allows taxpayer to submit one or more invoices to
+            MyInvois System.`,
+          },
+          query: SubmitInvoiceDocumentsQueryScheme,
+          body: SubmitInvoiceDocumentsBodyScheme,
+        }
+      )
+      .post(
+        "submit/credit-note",
+        ({ query, body }) => {
+          return submitCreditNotes(query, body);
+        },
+        {
+          detail: {
+            summary: "Submit Credit Notes",
+            description: `This API allows taxpayer to submit one or more Credit Note(s) to
+            MyInvois System.`,
+          },
+          query: SubmitCreditNoteDocumentsQueryScheme,
+          body: SubmitCreditNoteDocumentsBodyScheme,
+        }
+      )
+      .post(
+        "submit/debit-note",
+        ({ query, body }) => {
+          return submitDebitNotes(query, body);
+        },
+        {
+          detail: {
+            summary: "Submit Debit Notes",
+            description: `This API allows taxpayer to submit one or more Debit Note(s) to
+            MyInvois System.`,
+          },
+          query: SubmitDebitNoteDocumentsQueryScheme,
+          body: SubmitDebitNoteDocumentsBodyScheme,
+        }
+      )
+      .post(
+        "submit/refund-note",
+        ({ query, body }) => {
+          return submitRefundNotes(query, body);
+        },
+        {
+          detail: {
+            summary: "Submit Refund Notes",
+            description: `This API allows taxpayer to submit one or more Refund Note(s) to
+            MyInvois System.`,
+          },
+          query: SubmitRefundNoteDocumentsQueryScheme,
+          body: SubmitRefundNoteDocumentsBodyScheme,
+        }
+      )
+      .post(
+        "submit/self-billed-invoice",
+        ({ query, body }) => {
+          return submitSelfBilledInvoices(query, body);
+        },
+        {
+          detail: {
+            summary: "Submit Self-Billed Invoices",
+            description: `This API allows taxpayer to submit one or more Self-Billed Invoice(s) to
+            MyInvois System.`,
+          },
+          query: SubmitSelfBilledInvoiceDocumentsQueryScheme,
+          body: SubmitSelfBilledInvoiceDocumentsBodyScheme,
+        }
+      )
+      .post(
+        "submit/self-billed-credit-note",
+        ({ query, body }) => {
+          return submitSelfBilledCreditNotes(query, body);
+        },
+        {
+          detail: {
+            summary: "Submit  Self-Billed Credit Notes",
+            description: `This API allows taxpayer to submit one or more Self-Billed Credit Note(s) to
+            MyInvois System.`,
+          },
+          query: SubmitSelfBilledCreditNoteDocumentsQueryScheme,
+          body: SubmitSelfBilledCreditNoteDocumentsBodyScheme,
+        }
+      )
+      .post(
+        "submit/self-billed-debit-note",
+        ({ query, body }) => {
+          return submitSelfBilledDebitNotes(query, body);
+        },
+        {
+          detail: {
+            summary: "Submit  Self-Billed Debit Notes",
+            description: `This API allows taxpayer to submit one or more Self-Billed Debit Note(s) to
+            MyInvois System.`,
+          },
+          query: SubmitSelfBilledDebitNoteDocumentsQueryScheme,
+          body: SubmitSelfBilledDebitNoteDocumentsBodyScheme,
+        }
+      )
+      .post(
+        "submit/self-billed-refund-note",
+        ({ query, body }) => {
+          return submitSelfBilledRefundNotes(query, body);
+        },
+        {
+          detail: {
+            summary: "Submit Self-Billed Refund Notes",
+            description: `This API allows taxpayer to submit one or more Self-Billed Refund Note(s) to
+            MyInvois System.`,
+          },
+          query: SubmitSelfBilledRefundNoteDocumentsQueryScheme,
+          body: SubmitSelfBilledRefundNoteDocumentsBodyScheme,
         }
       )
   );

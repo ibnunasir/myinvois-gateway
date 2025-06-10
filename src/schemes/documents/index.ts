@@ -6,3 +6,8 @@ export * from "./cancel.schema";
 export * from "./reject.schema";
 export * from "./search.schema";
 export * from "./details.schema";
+export * from "./refund-note.schema";
+export * from "./self-billed-invoice.schema";
+export * from "./self-billed-credit-note.schema";
+export * from "./self-billed-debit-note.schema";
+export * from "./self-billed-refund-note.schema";

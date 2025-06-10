@@ -21,7 +21,10 @@ To run this image (assuming `farhansyah/myinvois-gateway` is the image name, rep
 docker run -d \
   -e CLIENT_ID="your_client_id_here" \
   -e CLIENT_SECRET="your_client_secret_here" \
+  -e GATEWAY_API_KEY="your_gateway_api_key_here" \ # Optional
   -e REDIS_URL="redis://<your_redis_host>:<your_redis_port>" \ # Optional
+  # -e SIGNING_PRIVATE_KEY_PEM="-----BEGIN PRIVATE KEY-----\n# ... your PKCS#8 private key base64 content ...\n# -----END PRIVATE KEY-----" # Optional; Required for e-Invoice v1.1 signing \
+  # -e SIGNING_CERTIFICATE_BASE64="your_certificate_raw_der_base64_content" # Optional; Required for e-Invoice v1.1 signing \
   -p 3000:3000 \
   --name myinvois_gateway \
   farhansyah/myinvois-gateway

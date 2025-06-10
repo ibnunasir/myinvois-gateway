@@ -43,6 +43,8 @@ This application requires the following environment variables:
 - `CLIENT_SECRET`: Your MyInvois Client Secret.
 - `GATEWAY_API_KEY` (Optional): An API key you can define to protect access to the gateway. If provided, this key must be sent in the `X-API-KEY` header for all requests to the gateway. If not set, the gateway will be accessible without an API key (not recommended for production or publicly accessible instances).
 - `REDIS_URL` (Optional): The connection URL for Redis (e.g., `redis://localhost:6379` for local development, or `redis://redis:6379` when using Docker Compose). If not provided, the application will run without Redis caching.
+- `SIGNING_PRIVATE_KEY_PEM`: Your private key in PKCS#8 PEM format (optional; required for e-Invoice v1.1 signing).
+- `SIGNING_CERTIFICATE_BASE64`: Your signing certificate's raw DER content, Base64 encoded (optional; required for e-Invoice v1.1 signing).
 
 **Setup:**
 
@@ -57,6 +59,7 @@ CLIENT_SECRET=your_client_secret_here
 # Required for document signing (e-Invoice v1.1)
 # SIGNING_PRIVATE_KEY_PEM="-----BEGIN PRIVATE KEY-----\n# ... your PKCS#8 private key base64 content ...\n# -----END PRIVATE KEY-----"
 # SIGNING_CERTIFICATE_BASE64="your_certificate_raw_der_base64_content"
+```
 
 This `.env` file will be automatically used by `bun run dev`, when running the compiled binary locally (if your application loads it, typically via a library like `dotenv` which Bun might handle implicitly for `process.env`), and by Docker Compose if it's in the same directory.
 

@@ -28,7 +28,7 @@ const readFileContent = (
       if (isExplicitPath) {
         // Only warn if an explicitly provided path is not found
         console.warn(
-          `Warning: File not found at ${filePath} (from ${sourceDescription}). Falling back.`
+          "Warning: File not found for an explicitly provided path. Falling back."
         );
       }
       return undefined;
@@ -37,22 +37,16 @@ const readFileContent = (
     const content = fs.readFileSync(filePath, "utf8");
     // Log success if a file was successfully read
     if (isExplicitPath) {
-      console.info(
-        `INFO: Successfully loaded credential from ${filePath} (from ${sourceDescription}).`
-      );
+      console.info("INFO: Successfully loaded credential from explicit path.");
     } else {
       // This is a default path
-      console.info(
-        `INFO: Successfully loaded credential from default path: ${filePath} (from ${sourceDescription}).`
-      );
+      console.info("INFO: Successfully loaded credential from default path.");
     }
     return content;
   } catch (error) {
     // Always warn on other read errors (e.g., permission issues for existing file)
     console.warn(
-      `Warning: Could not read file at ${filePath} (from ${sourceDescription}). Error: ${
-        (error as Error).message
-      }. Falling back.`
+      `Warning: Could not read credential file. Error: ${(error as Error).message}. Falling back.`
     );
     return undefined;
   }

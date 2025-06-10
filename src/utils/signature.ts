@@ -77,7 +77,7 @@ export async function importPrivateKey(
  * Processes a base64 encoded X.509 certificate to extract its issuer name,
  * serial number, and calculate its SHA-256 digest.
  * The input certificateBase64 should be the raw base64 string of the DER-encoded certificate,
- * *without* PEM headers/footers (e.g., directly from CONFIG.signingCertificateBase64).
+ * *without* PEM headers/footers.
  * @param certificateBase64 The base64 encoded X.509 certificate string (raw DER content).
  * @returns A Promise resolving to an object containing issuerName, serialNumber, and certificateDigestBase64.
  * @throws Error if certificate processing fails.
@@ -125,33 +125,34 @@ export async function processCertificate(certificateBase64: string): Promise<{
 
 /**
  * Prepares the complete set of parameters required for generating a UBL digital signature.
- * It processes the private key and certificate, and combines them with the document
- * and other signature metadata.
+ * It processes the private key and certificate from CONFIG.
  *
- * @param privateKeyPem The signer's private key in PEM format.
- * @param signingCertificateBase64 The signer's X.509 certificate, base64 encoded (raw DER content).
- * @param options Optional parameters to override default signature metadata.
  * @returns A Promise that resolves to an object conforming to the SignatureParams interface.
+ * @throws Error if signing credentials are not configured or are invalid.
  */
 export async function getSignatureParams(): Promise<SignatureParams> {
   const privateKeyPem = CONFIG.privateKeyPem;
   const signingCertificateBase64 = CONFIG.signingCertificateBase64;
 
   if (!privateKeyPem) {
-    throw new Error("Private key configuration (privateKeyPem) is missing.");
+    // Check for undefined
+    throw new Error(
+      "Signing private key is not configured. Please check your environment variables (SIGNING_PRIVATE_KEY_PATH, PRIVATE_KEY_PEM) or ensure the key file exists at the default path (myinvois-gateway/certs/private_key.pem) and is readable."
+    );
   }
 
   if (!signingCertificateBase64) {
+    // Check for undefined
     throw new Error(
-      "Signing certificate configuration (signingCertificateBase64) is missing."
+      "Signing certificate is not configured. Please check your environment variables (SIGNING_CERTIFICATE_PATH, SIGNING_CERTIFICATE_BASE64) or ensure the certificate file exists at the default path (myinvois-gateway/certs/certificate_base64.txt) and is readable."
     );
   }
 
-  const privateKey = await importPrivateKey(privateKeyPem).catch((_e) => {
-    throw new Error(
-      "Invalid PEM private key format. Please check your configuration."
-    );
-  });
+  // At this point, TypeScript knows privateKeyPem and signingCertificateBase64 are strings.
+  // The importPrivateKey and processCertificate functions will handle further format validation.
+
+  const privateKey = await importPrivateKey(privateKeyPem);
+  // No longer catching error from importPrivateKey here, as it will throw a descriptive error if format is invalid.
 
   const certDetails = await processCertificate(signingCertificateBase64);
 
@@ -161,6 +162,6 @@ export async function getSignatureParams(): Promise<SignatureParams> {
     certificateDigestBase64: certDetails.certificateDigestBase64,
     certificateIssuerName: certDetails.issuerName,
     certificateSerialNumber: certDetails.serialNumber,
-    documentToSign: undefined,
+    documentToSign: undefined, // This will be set per document by the caller
   };
 }

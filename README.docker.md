@@ -23,8 +23,24 @@ docker run -d \
   -e CLIENT_SECRET="your_client_secret_here" \
   -e GATEWAY_API_KEY="your_gateway_api_key_here" \ # Optional
   -e REDIS_URL="redis://<your_redis_host>:<your_redis_port>" \ # Optional
-  # -e SIGNING_PRIVATE_KEY_PEM="-----BEGIN PRIVATE KEY-----\n# ... your PKCS#8 private key base64 content ...\n# -----END PRIVATE KEY-----" # Optional; Required for e-Invoice v1.1 signing \
-  # -e SIGNING_CERTIFICATE_BASE64="your_certificate_raw_der_base64_content" # Optional; Required for e-Invoice v1.1 signing \
+  # For document signing (e-Invoice v1.1), provide credentials.
+  # Option 1: Direct content (if not using file paths)
+  # -e SIGNING_PRIVATE_KEY_PEM="-----BEGIN PRIVATE KEY-----\n# ... your PKCS#8 private key content ...\n# -----END PRIVATE KEY-----" \
+  # -e SIGNING_CERTIFICATE_BASE64="your_certificate_raw_der_base64_content" \
+  #
+  # Option 2: File paths (mount files into the container)
+  # Example: Mount local './my-certs' directory to '/app/certs' in the container
+  # -v ./my-certs:/app/certs:ro \
+  # If files are named 'private_key.pem' and 'certificate_base64.txt' within the mounted '/app/certs',
+  # the application will pick them up by default.
+  #
+  # Or, specify custom paths within the container:
+  # -e SIGNING_PRIVATE_KEY_PATH="/etc/secrets/mykey.pem" \
+  # -e SIGNING_CERTIFICATE_PATH="/etc/secrets/mycert.txt" \
+  # -v /path/on/host/mykey.pem:/etc/secrets/mykey.pem:ro \
+  # -v /path/on/host/mycert.txt:/etc/secrets/mycert.txt:ro \
+  #
+  # See the main README.md in the source repository for full configuration details and precedence.
   -p 3000:3000 \
   --name myinvois_gateway \
   farhansyah/myinvois-gateway

@@ -2,131 +2,161 @@
 
 The MyInvois Gateway supports digitally signing documents before submission, as required for certain document types or scenarios in the MyInvois system (specifically for e-Invoice version 1.1). Document signing in the gateway relies on providing your private key and corresponding X.509 signing certificate.
 
-The gateway's signing logic, implemented using Node.js's `crypto.subtle` and `X509Certificate`, requires:
+## Required Credential Formats
 
-1.  Your **Private Key** in **PKCS#8 PEM format**.
-2.  Your **Signing Certificate** in **raw DER format, Base64 encoded**. This is the base64 content of the DER certificate binary, *without* the `-----BEGIN CERTIFICATE-----` and `-----END CERTIFICATE-----` headers/footers.
+Regardless of how you provide the credentials to the gateway, the content must adhere to these formats:
 
-These are configured via environment variables:
+1.  **Private Key**: Your private key must be in **PKCS#8 PEM format** (unencrypted). This includes the `-----BEGIN PRIVATE KEY-----` and `-----END PRIVATE KEY-----` headers/footers.
+2.  **Signing Certificate**: Your signing certificate must be the **raw DER content, Base64 encoded**. This is *only* the Base64 string of the certificate's binary DER data, *without* any PEM headers/footers (e.g., `-----BEGIN CERTIFICATE-----`).
 
--   `SIGNING_PRIVATE_KEY_PEM`: Your private key in PKCS#8 PEM format.
--   `SIGNING_CERTIFICATE_BASE64`: Your signing certificate's raw DER content, Base64 encoded.
+## Credential Loading Order
+
+The gateway attempts to load the private key and signing certificate using the following order of precedence. The first successful method for each credential (key and certificate independently) will be used:
+
+1.  **Explicit File Paths**: From files specified by the `SIGNING_PRIVATE_KEY_PATH` and `SIGNING_CERTIFICATE_PATH` environment variables.
+2.  **Default File Paths**: If explicit path variables are not set or the specified files are not found, the gateway looks for files at default conventional paths relative to the project root (`myinvois-gateway/`):
+    *   Private Key: `certs/private_key.pem`
+    *   Certificate: `certs/certificate_base64.txt`
+3.  **Direct Environment Variable Content**: If credentials are not successfully loaded from either explicit or default file paths, the gateway attempts to use the content directly from the `SIGNING_PRIVATE_KEY_PEM` and `SIGNING_CERTIFICATE_BASE64` environment variables.
+4.  **Undefined (Fallback)**: If none of the above methods yield a credential, the configuration value for the missing item(s) will be `undefined`. Document signing will be unavailable, and a warning will be logged by the application during startup. Attempting to sign without fully configured credentials will result in an error.
+
+## Configuring Credentials
+
+You can configure your signing credentials using one of the methods described below. Choose the method that best suits your deployment strategy.
+
+### Method 1: Explicit File Paths (Highest Priority)
+
+Set these environment variables to point to the exact location of your credential files:
+
+-   `SIGNING_PRIVATE_KEY_PATH`: Absolute or relative path to your PKCS#8 PEM private key file.
+-   `SIGNING_CERTIFICATE_PATH`: Absolute or relative path to your file containing the Base64 encoded DER certificate.
+
+**Example `.env` configuration:**
+
+```env
+# Method 1: Explicit File Paths
+SIGNING_PRIVATE_KEY_PATH=/secure/path/to/my_private_key.pem
+SIGNING_CERTIFICATE_PATH=/secure/path/to/my_certificate_base64.txt
+```
+
+### Method 2: Default File Paths (Recommended for Simplicity)
+
+If you prefer a conventional setup without setting explicit path variables, you can place your credential files at these default locations within your `myinvois-gateway` project directory:
+
+-   Private Key File: `myinvois-gateway/certs/private_key.pem`
+-   Certificate File: `myinvois-gateway/certs/certificate_base64.txt`
+
+Create the `certs` directory if it doesn't exist. If files are present at these default locations and the `SIGNING_PRIVATE_KEY_PATH` or `SIGNING_CERTIFICATE_PATH` variables are *not* set (or point to non-existent files), the gateway will automatically attempt to use these default files.
+
+**Example file structure:**
+
+```
+myinvois-gateway/
+├── certs/
+│   ├── private_key.pem
+│   └── certificate_base64.txt
+├── src/
+├── package.json
+└── ... (other project files)
+```
+
+No specific `.env` lines are needed for `SIGNING_PRIVATE_KEY_PATH` or `SIGNING_CERTIFICATE_PATH` if you use this method and the files are correctly named and placed.
+
+### Method 3: Direct Environment Variable Content (Fallback)
+
+If credentials are not loaded via file paths (neither explicit nor default), you can provide the content directly in these environment variables:
+
+-   `SIGNING_PRIVATE_KEY_PEM`: The full string content of your PKCS#8 PEM private key.
+-   `SIGNING_CERTIFICATE_BASE64`: The Base64 encoded string of your raw DER certificate.
+
+**Example `.env` configuration:**
+
+```env
+# Method 3: Direct Content
+SIGNING_PRIVATE_KEY_PEM="-----BEGIN PRIVATE KEY-----\nMIIC8DCCAd...your key data...\n-----END PRIVATE KEY-----"
+SIGNING_CERTIFICATE_BASE64="MIIClTCCAf4C...your base64 certificate data..."
+```
+**Note on multiline environment variables**: Ensure your environment variable system correctly handles multiline strings for `SIGNING_PRIVATE_KEY_PEM`. Often, replacing newlines with `\n` within a double-quoted string works.
+
+## Important Considerations for Credential Content
+
+-   **Private Key Content**:
+    -   Must be in **PKCS#8 PEM format**. This includes the `-----BEGIN PRIVATE KEY-----` and `-----END PRIVATE KEY-----` headers/footers.
+    -   The key must be **unencrypted**. If your key is encrypted or in a different format (like PKCS#1), convert it first (see "Extracting Credentials from a .p12 File" below for PKCS#1 to PKCS#8 conversion).
+-   **Certificate Content**:
+    -   Must be the **Base64 string of the certificate's raw DER binary content**.
+    -   Do **not** include `-----BEGIN CERTIFICATE-----` and `-----END CERTIFICATE-----` headers/footers if you are converting from a PEM certificate.
 
 ## Obtaining Your Signing Credentials
 
-Your private key and signing certificate are typically generated and provided to you when you set up signing capabilities with the relevant authority or the MyInvois system itself.
+Your private key and signing certificate are typically generated and provided to you when you set up signing capabilities with the relevant authority or the MyInvois system itself. Consult the official MyInvois documentation or your Certification Authority (CA) for steps to obtain these. They might be provided as `.p12`, `.pfx`, `.pem`, `.key`, `.cer`, or `.crt` files.
 
-You would usually download your certificate (often as a `.cer` or `.pfx` file, or sometimes provided as PEM text) and the associated private key (often as a `.key` or `.pfx` file, or PEM text).
+## Converting Credential Formats (If Necessary)
 
-Consult the official MyInvois documentation or the instructions provided by your Certification Authority (CA) for the exact steps to obtain these files.
+You might need to convert your credentials into the required formats.
 
-## Configuring Environment Variables
+### Converting Certificate to Base64 Encoded DER
 
-You need to add the following environment variables to your gateway's configuration (e.g., your `.env` file or Docker environment variables).
+If your certificate is in PEM format (e.g., `my_cert.pem`), you need its Base64 encoded raw DER content.
 
-```env
-# Required for document signing
-SIGNING_PRIVATE_KEY_PEM="-----BEGIN PRIVATE KEY-----
-... your PKCS#8 private key base64 content ...
------END PRIVATE KEY-----"
-
-SIGNING_CERTIFICATE_BASE64="your_certificate_raw_der_base64_content"
-```
-
-**Important Considerations:**
-
-*   **`SIGNING_PRIVATE_KEY_PEM`**: This must be the full PEM block, including the `-----BEGIN PRIVATE KEY-----` and `-----END PRIVATE KEY-----` headers and footers. If your private key is in a different format (like PKCS#1) or encrypted, you may need to convert it first. The gateway expects an unencrypted PKCS#8 PEM key.
-*   **`SIGNING_CERTIFICATE_BASE64`**: This must be *only* the Base64 string of the certificate's DER binary content. Do *not* include the `-----BEGIN CERTIFICATE-----` and `-----END CERTIFICATE-----` headers/footers if you obtained it in PEM format.
-
-## Converting Certificate Formats (If Necessary)
-
-If your signing certificate is provided in PEM format, you will need to convert it to the raw DER Base64 format required by the `SIGNING_CERTIFICATE_BASE64` environment variable.
-
-You can use the `openssl` command-line tool for this conversion.
-
-**Converting PEM to DER:**
-
-First, convert the PEM certificate to DER format:
-
-```bash
-openssl x509 -in your_certificate.pem -out your_certificate.der -outform DER
-```
-
-Replace `your_certificate.pem` with the path to your PEM formatted certificate file. This will create a binary DER file named `your_certificate.der`.
-
-**Encoding DER to Base64:**
-
-Next, encode the binary DER file content into a Base64 string.
-
-*   **On Linux/macOS:**
-
+1.  **Convert PEM to DER:**
     ```bash
-    base64 < your_certificate.der
-    # or
-    openssl base64 -in your_certificate.der -out your_certificate.base64
-    cat your_certificate.base64 # Display the base64 content
+    openssl x509 -in my_cert.pem -out my_cert.der -outform DER
     ```
+2.  **Base64 Encode the DER file:**
+    -   Linux/macOS:
+        ```bash
+        base64 < my_cert.der
+        # or, to save to a file:
+        base64 < my_cert.der > certificate_base64.txt
+        ```
+    -   Windows (PowerShell):
+        ```powershell
+        [System.Convert]::ToBase64String([System.IO.File]::ReadAllBytes("my_cert.der"))
+        # or, to save to a file:
+        [System.Convert]::ToBase64String([System.IO.File]::ReadAllBytes("my_cert.der")) | Set-Content -Path "certificate_base64.txt"
+        ```
+The resulting Base64 string is what you need. You can:
+-   Save this string into the file `myinvois-gateway/certs/certificate_base64.txt` (for Method 2).
+-   Save it to a custom file path and set `SIGNING_CERTIFICATE_PATH` (for Method 1).
+-   Use the string directly as the value for `SIGNING_CERTIFICATE_BASE64` (for Method 3).
 
-*   **On Windows (using PowerShell):**
-
-    ```powershell
-    [System.Convert]::ToBase64String([System.IO.File]::ReadAllBytes("your_certificate.der"))
-    ```
-
-The output of these commands will be the Base64 string you need for the `SIGNING_CERTIFICATE_BASE64` environment variable.
-
-**From PEM to Base64 (without intermediate file):**
-
-You can also pipe the output:
-
-*   **On Linux/macOS:**
-
-    ```bash
-    openssl x509 -in your_certificate.pem -outform DER | base64
-    ```
-
-Copy the resulting Base64 string and paste it as the value for `SIGNING_CERTIFICATE_BASE64` in your environment configuration.
-
-## Extracting Credentials from a .p12 File (If Necessary)
-
-If your signing credentials are provided in a `.p12` (PKCS#12) file, which bundles both the private key and certificate, you will need to extract them using `openssl`.
-
-You'll likely need the password that protects the `.p12` file.
-
-**1. Extract the Private Key (to PKCS#8 PEM):**
-
-This command extracts the private key from the `.p12` file. The `-nodes` option means "no DES encryption", resulting in an unencrypted private key output. The `-outform PEM` specifies the output format. The result will typically be in PKCS#1 format initially, which then needs to be converted to PKCS#8.
-
+**Directly from PEM to Base64 DER (Linux/macOS):**
 ```bash
-openssl pkcs12 -in your_certificate.p12 -nocerts -nodes -out your_private_key.pem -outform PEM
+openssl x509 -in my_cert.pem -outform DER | base64
+# To save to the default file:
+# openssl x509 -in my_cert.pem -outform DER | base64 > certs/certificate_base64.txt
 ```
 
-Replace `your_certificate.p12` with the path to your `.p12` file. You will be prompted for the `.p12` import password. This creates `your_private_key.pem`.
+### Extracting Credentials from a .p12 / .pfx File
 
-Now, convert this private key (likely PKCS#1 PEM) to PKCS#8 PEM format, which the gateway expects:
+If your key and certificate are bundled in a PKCS#12 file (`.p12` or `.pfx`), you'll need `openssl` and the import password for the file.
 
-```bash
-openssl pkcs8 -in your_private_key.pem -topk8 -nocrypt -out your_private_key_pkcs8.pem
-```
+1.  **Extract and Convert Private Key to PKCS#8 PEM:**
+    a.  Extract the private key (often in PKCS#1 PEM format initially):
+        ```bash
+        openssl pkcs12 -in your_bundle.p12 -nocerts -nodes -out private_key_pkcs1.pem
+        ```
+        (Enter import password when prompted)
+    b.  Convert PKCS#1 PEM to PKCS#8 PEM:
+        ```bash
+        openssl pkcs8 -topk8 -inform PEM -in private_key_pkcs1.pem -outform PEM -nocrypt -out private_key.pem
+        ```
+    The file `private_key.pem` now contains the required PKCS#8 PEM key.
+    -   You can save/rename this file to `myinvois-gateway/certs/private_key.pem` (for Method 2).
+    -   Or save it to a custom path and set `SIGNING_PRIVATE_KEY_PATH` (for Method 1).
+    -   Or copy its content for `SIGNING_PRIVATE_KEY_PEM` (for Method 3).
 
-Replace `your_private_key.pem` with the file created in the previous step. This creates `your_private_key_pkcs8.pem`. The content of `your_private_key_pkcs8.pem` (including headers/footers) is what you should use for the `SIGNING_PRIVATE_KEY_PEM` environment variable.
-
-**2. Extract the Certificate (to PEM):**
-
-This command extracts the certificate(s) from the `.p12` file. The `-nokeys` option excludes the private key from the output.
-
-```bash
-openssl pkcs12 -in your_certificate.p12 -clcerts -nokeys -out your_certificate.pem
-```
-
-Replace `your_certificate.p12` with the path to your `.p12` file. You will be prompted for the `.p12` import password again. This creates `your_certificate.pem`.
-
-**3. Convert the Certificate from PEM to DER Base64:**
-
-Now that you have the certificate in PEM format (`your_certificate.pem`), follow the instructions in the "Converting Certificate Formats (If Necessary)" section above to convert it to the raw DER Base64 format required for the `SIGNING_CERTIFICATE_BASE64` environment variable.
+2.  **Extract Certificate and Convert to Base64 DER:**
+    a.  Extract the certificate (usually in PEM format):
+        ```bash
+        openssl pkcs12 -in your_bundle.p12 -clcerts -nokeys -out certificate.pem
+        ```
+        (Enter import password when prompted)
+    b.  Follow the steps in "Converting Certificate to Base64 Encoded DER" above using `certificate.pem` as your input to get the Base64 DER string. Then use this string as appropriate for Method 1, 2, or 3 for the certificate.
 
 ## Using Signing in API Requests
 
-Once the signing credentials (`SIGNING_PRIVATE_KEY_PEM` and `SIGNING_CERTIFICATE_BASE64`) are correctly configured in the gateway's environment, you can trigger document signing for submission requests by including the `sign=true` query parameter in your API call (e.g., `/documents/invoices?sign=true`).
+Once the signing credentials are correctly configured using any of the described methods, you can trigger document signing for submission requests by including the `sign=true` query parameter in your API call (e.g., `/documents/invoices?sign=true`).
 
 If the `sign` query parameter is omitted or set to `false`, the gateway will submit documents without adding the digital signature block.

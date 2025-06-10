@@ -23,7 +23,7 @@ Use this gateway to easily submit invoices, credit notes, or debit notes from an
 - **Automatic UBL Translation:** Converts JSON input to the required UBL format.
 - **Automated Hashing & Encoding:** Handles document hash calculation and Base64 encoding.
 - **Official API Formatting:** Prepares the payload for the official MyInvois API.
-- **Document Signing:** Manages the document signing process.
+- **Document Signing:** Manages the document signing process with flexible configuration.
 - **Optional Redis Caching:** Improves performance and reliability by caching responses.
 - **Developer-Friendly API Docs:** Interactive API documentation available via Swagger UI.
 
@@ -43,8 +43,21 @@ This application requires the following environment variables:
 - `CLIENT_SECRET`: Your MyInvois Client Secret.
 - `GATEWAY_API_KEY` (Optional): An API key you can define to protect access to the gateway. If provided, this key must be sent in the `X-API-KEY` header for all requests to the gateway. If not set, the gateway will be accessible without an API key (not recommended for production or publicly accessible instances).
 - `REDIS_URL` (Optional): The connection URL for Redis (e.g., `redis://localhost:6379` for local development, or `redis://redis:6379` when using Docker Compose). If not provided, the application will run without Redis caching.
-- `SIGNING_PRIVATE_KEY_PEM`: Your private key in PKCS#8 PEM format (optional; required for e-Invoice v1.1 signing).
-- `SIGNING_CERTIFICATE_BASE64`: Your signing certificate's raw DER content, Base64 encoded (optional; required for e-Invoice v1.1 signing).
+
+**For Document Signing (Optional; required for e-Invoice v1.1 signing):**
+
+The gateway uses a specific order of precedence to load signing credentials:
+1.  **Explicit Path:** From file paths set in `SIGNING_PRIVATE_KEY_PATH` and `SIGNING_CERTIFICATE_PATH`.
+2.  **Default Path:** If explicit paths are not set or files not found, from default paths:
+    -   Private Key: `certs/private_key.pem` (relative to project root)
+    -   Certificate: `certs/certificate_base64.txt` (relative to project root)
+3.  **Direct Content:** If not found via paths, from direct content in `SIGNING_PRIVATE_KEY_PEM` and `SIGNING_CERTIFICATE_BASE64`.
+4.  **Undefined:** If none of the above methods yield a credential, the configuration value will be `undefined`. Document signing will be unavailable, and a warning will be logged by the application during startup. Attempting to sign without configured credentials will result in an error.
+
+- `SIGNING_PRIVATE_KEY_PATH` (Optional): Path to a file containing your private key in PKCS#8 PEM format. This is the **highest priority** if set and the file is readable.
+- `SIGNING_CERTIFICATE_PATH` (Optional): Path to a file containing your signing certificate's raw DER content, Base64 encoded. This is the **highest priority** if set and the file is readable.
+- `SIGNING_PRIVATE_KEY_PEM` (Optional): Your private key in PKCS#8 PEM format (as a string). Used if credentials are not successfully loaded via `SIGNING_PRIVATE_KEY_PATH` or the default path (`certs/private_key.pem`).
+- `SIGNING_CERTIFICATE_BASE64` (Optional): Your signing certificate's raw DER content, Base64 encoded (as a string). Used if credentials are not successfully loaded via `SIGNING_CERTIFICATE_PATH` or the default path (`certs/certificate_base64.txt`).
 
 **Setup:**
 
@@ -53,11 +66,30 @@ Create a `.env` file in the root of the project (`myinvois-gateway/.env`) and ad
 ```env
 CLIENT_ID=your_client_id_here
 CLIENT_SECRET=your_client_secret_here
-# GATEWAY_API_KEY=your_gateway_api_key_here # Optional: Define to secure the gateway. If omitted, the gateway will be unprotected.
-# REDIS_URL=redis://localhost:6379 # Optional: for local Bun development if using local Redis
+# GATEWAY_API_KEY=your_gateway_api_key_here # Optional
+# REDIS_URL=redis://localhost:6379 # Optional
 
-# Required for document signing (e-Invoice v1.1)
-# SIGNING_PRIVATE_KEY_PEM="-----BEGIN PRIVATE KEY-----\n# ... your PKCS#8 private key base64 content ...\n# -----END PRIVATE KEY-----"
+# --- Document Signing Credentials (e-Invoice v1.1) ---
+# The application will attempt to load credentials in the following order:
+# 1. Explicit path (SIGNING_PRIVATE_KEY_PATH, SIGNING_CERTIFICATE_PATH)
+# 2. Default path (./certs/private_key.pem, ./certs/certificate_base64.txt)
+# 3. Direct content (SIGNING_PRIVATE_KEY_PEM, SIGNING_CERTIFICATE_BASE64)
+# If none are found, signing will be unavailable.
+
+# Option 1: Specify explicit paths to your credential files (Highest Priority)
+# SIGNING_PRIVATE_KEY_PATH="/custom/path/to/your_private_key.pem"
+# SIGNING_CERTIFICATE_PATH="/custom/path/to/your_certificate_base64.txt"
+
+# Option 2: Use default paths by placing files in a 'certs' directory
+# (No need to set _PATH variables if using these exact relative paths from project root)
+# Create a 'certs' directory in 'myinvois-gateway/'
+# - myinvois-gateway/certs/private_key.pem
+# - myinvois-gateway/certs/certificate_base64.txt
+# The application will automatically check these locations if SIGNING_PRIVATE_KEY_PATH 
+# and SIGNING_CERTIFICATE_PATH are not set or if their specified files are not found.
+
+# Option 3: Provide credential content directly as environment variables (Fallback)
+# SIGNING_PRIVATE_KEY_PEM="-----BEGIN PRIVATE KEY-----\n...your PKCS#8 private key content...\n-----END PRIVATE KEY-----"
 # SIGNING_CERTIFICATE_BASE64="your_certificate_raw_der_base64_content"
 ```
 
@@ -65,11 +97,26 @@ This `.env` file will be automatically used by `bun run dev`, when running the c
 
 ## Document Signing Configuration
 
-To enable document signing (required for e-Invoice v1.1), you need to provide your private key and signing certificate via environment variables. Detailed instructions on how to configure signing, including required formats and how to convert credentials from `.p12` files, can be found in:
+To enable document signing (required for e-Invoice v1.1), you need to provide your private key and signing certificate. The gateway loads these credentials with the following precedence:
+
+1.  **Explicit File Paths:** By setting the `SIGNING_PRIVATE_KEY_PATH` and `SIGNING_CERTIFICATE_PATH` environment variables to the locations of your credential files.
+    -   The file at `SIGNING_PRIVATE_KEY_PATH` should contain the PKCS#8 PEM private key.
+    -   The file at `SIGNING_CERTIFICATE_PATH` should contain the Base64 encoded raw DER content of your certificate.
+2.  **Default File Paths:** If the explicit path variables are not set or the specified files are not found, the gateway will automatically look for credentials at these default locations relative to the project root:
+    -   Private Key: `certs/private_key.pem`
+    -   Certificate: `certs/certificate_base64.txt`
+    You can create a `certs` directory in your project root (`myinvois-gateway/certs/`) and place your files there with these names.
+3.  **Direct Environment Variable Content:** If credentials are not found through file paths (neither explicit nor default), the gateway will attempt to use the content directly from:
+    -   `SIGNING_PRIVATE_KEY_PEM`: The full PKCS#8 PEM private key string.
+    -   `SIGNING_CERTIFICATE_BASE64`: The Base64 encoded raw DER content of your certificate.
+
+If credentials are not successfully loaded by any of these methods, the respective configuration values will be `undefined`. In this case, document signing capabilities will be unavailable, and a warning will be logged by the application during startup. Attempting a signing operation without fully configured credentials will result in an error.
+
+Detailed instructions on how to prepare your credentials (e.g., format requirements, converting from `.p12` files) can be found in:
 
 - [instructions/adding_signature.md](instructions/adding_signature.md)
 
-Please refer to this file for necessary environment variables (`SIGNING_PRIVATE_KEY_PEM` and `SIGNING_CERTIFICATE_BASE64`) and guidance on preparing your key and certificate.
+Please refer to this file for guidance on preparing your key and certificate content.
 
 ## Running the Application
 
@@ -83,7 +130,7 @@ This method uses Bun to run the application directly from the source code with h
     ```bash
     bun install
     ```
-2.  **Set environment variables:** Ensure your `.env` file in the project root is configured, or set the environment variables directly in your shell. If using local Redis, make sure `REDIS_URL` points to it (e.g., `redis://localhost:6379`).
+2.  **Set environment variables:** Ensure your `.env` file in the project root is configured (see "Environment Variables" section), or set the environment variables directly in your shell. If using local Redis, make sure `REDIS_URL` points to it (e.g., `redis://localhost:6379`). For signing, ensure your key and certificate files are in place (e.g., in `myinvois-gateway/certs/`) if using default paths, or that the appropriate environment variables are set.
 3.  **Run the development server:**
     ```bash
     bun run dev
@@ -98,7 +145,7 @@ This method compiles the application into a standalone executable using Bun, whi
     ```bash
     bun install
     ```
-2.  **Set environment variables:** Ensure your `.env` file is configured or set them in your shell.
+2.  **Set environment variables:** Ensure your `.env` file is configured or set them in your shell. For signing, ensure your key and certificate files are accessible (e.g., in a `certs` directory alongside the binary if using relative default paths from the binary's location, or use absolute paths in environment variables).
 3.  **Build the application:**
     ```bash
     bun run build
@@ -107,113 +154,102 @@ This method compiles the application into a standalone executable using Bun, whi
 4.  **Run the executable:**
     ```bash
     # Make sure environment variables are set in your current shell
-    # or that the application loads them from .env
+    # or that the application loads them from .env.
+    # If using default certs paths, ensure the 'certs' directory is relative to where 'server' is run.
+    # e.g., if 'server' is in myinvois-gateway/, then 'certs/' should also be in myinvois-gateway/
     ./server
     ```
     The application will be available at `http://localhost:3000`.
 
 ### 3. Using Docker
 
-This method involves running the application as a Docker container. You can either pull a pre-built image from Docker Hub or build it locally.
+This method involves running the application as a Docker container.
 
 **Option A: Pull from Docker Hub (Recommended for quick start)**
-
-You can use the pre-built image available on Docker Hub:
 
 ```bash
 docker pull farhansyah/myinvois-gateway
 ```
-
-Then, skip to step 2 (Run the Docker container), ensuring you use `farhansyah/myinvois-gateway` as the image name in the `docker run` command.
+Then, skip to step 2 (Run the Docker container), ensuring you use `farhansyah/myinvois-gateway` as the image name.
 
 **Option B: Build the Docker image locally**
 
-1.  **Build the Docker image:**
-    From the project root (`myinvois-gateway/`), run:
-
+1.  **Build the Docker image:** From the project root (`myinvois-gateway/`), run:
     ```bash
     docker build -t myinvois-gateway .
     ```
 
-    (If using `docker buildx` and you want to load it directly into your local images: `docker buildx build -t myinvois-gateway --load .`)
-
 2.  **Run the Docker container:**
-    If you pulled the image from Docker Hub, use `farhansyah/myinvois-gateway` as the image name. If you built it locally, use `myinvois-gateway`.
+    When running the Docker container, you can provide signing credentials by:
+    - Mounting files/directories into the container and setting `SIGNING_PRIVATE_KEY_PATH` and `SIGNING_CERTIFICATE_PATH` to their paths *within the container*.
+    - Mounting a `certs` directory to `/app/certs` (or `certs/` if WORKDIR is `/app`) inside the container to use the default paths.
+    - Setting `SIGNING_PRIVATE_KEY_PEM` and `SIGNING_CERTIFICATE_BASE64` directly.
 
-    #### From Local Image
-
+    #### Example (Using Default Paths by Mounting a `certs` Directory):
     ```bash
-    # Example for locally built image:
+    # Assume you have ./my-local-certs/private_key.pem and ./my-local-certs/certificate_base64.txt on your host.
     docker run -d \
       -e CLIENT_ID="your_client_id_here" \
       -e CLIENT_SECRET="your_client_secret_here" \
-      # -e GATEWAY_API_KEY="your_gateway_api_key_here" \ # Optional: Define to secure the gateway
-      -e REDIS_URL="redis://<your_redis_host>:<your_redis_port>" \ # Optional: for Redis caching
+      # -e GATEWAY_API_KEY="your_gateway_api_key_here" \ # Optional
+      # -e REDIS_URL="redis://<your_redis_host>:<your_redis_port>" \ # Optional
+      -v ./my-local-certs:/app/certs:ro \ # Mounts host's ./my-local-certs to /app/certs in container
       -p 3000:3000 \
       --name myinvois_gateway \
-      myinvois-gateway
+      myinvois-gateway # or farhansyah/myinvois-gateway
     ```
+    *In this example, the application will look for `/app/certs/private_key.pem` and `/app/certs/certificate_base64.txt` by default.*
 
-    #### From Docker Hub Image
-
+    #### Example (Using Explicit Paths with Volume Mounts):
     ```bash
-    Example for Docker Hub image:
     docker run -d \
       -e CLIENT_ID="your_client_id_here" \
       -e CLIENT_SECRET="your_client_secret_here" \
-      # -e GATEWAY_API_KEY="your_gateway_api_key_here" \ # Optional: Define to secure the gateway
-      -e REDIS_URL="redis://<your_redis_host>:<your_redis_port>" \ # Optional: for Redis caching
+      -e SIGNING_PRIVATE_KEY_PATH="/etc/secrets/my_private_key.pem" \
+      -e SIGNING_CERTIFICATE_PATH="/etc/secrets/my_certificate_base64.txt" \
+      -v /path/on/host/to/your_private_key.pem:/etc/secrets/my_private_key.pem:ro \
+      -v /path/on/host/to/your_certificate_base64.txt:/etc/secrets/my_certificate_base64.txt:ro \
       -p 3000:3000 \
       --name myinvois_gateway \
-      farhansyah/myinvois-gateway
+      myinvois-gateway # or farhansyah/myinvois-gateway
     ```
 
-    - Replace placeholder values for `CLIENT_ID` and `CLIENT_SECRET`.
-    - If you are using a `GATEWAY_API_KEY`, uncomment and set that line.
-    - The `-d` flag runs the container in detached mode.
+    - Replace placeholder values. The `:ro` makes the mounts read-only.
     - Access the application at `http://localhost:3000`.
-    - To see logs: `docker logs myinvois_gateway`
-    - To stop: `docker stop myinvois_gateway`
-    - To remove: `docker rm myinvois_gateway`
 
 ### 4. Using Docker Compose
 
-This is the recommended method for a consistent development and testing environment, as it manages both the application and Redis services.
+This is a recommended method for a consistent environment.
 
 1.  **Ensure Docker Compose is installed.**
-2.  **Create/Verify `.env` file:** Make sure you have a `.env` file in the project root (`myinvois-gateway/.env`) with your `CLIENT_ID` and `CLIENT_SECRET`. The `GATEWAY_API_KEY` is optional; if you choose to use one, add it here. The `REDIS_URL` will be handled by Docker Compose to point to its own Redis service.
-    ```env
-    CLIENT_ID=your_client_id_here
-    CLIENT_SECRET=your_client_secret_here
-    # GATEWAY_API_KEY=your_gateway_api_key_here # Optional: Define to secure the gateway
+2.  **Create/Verify `.env` file:** (See "Environment Variables" section).
+    If using default file paths for signing (`certs/...`), you'll need to configure `docker-compose.yml` to mount your local `certs` directory into the service.
+    Example `docker-compose.yml` snippet for mounting a local `certs` directory:
+    ```yaml
+    # In your docker-compose.yml
+    services:
+      app:
+        # ... other app configurations
+        # environment: # .env file usually takes precedence for these if SIGNING...PATH not set
+        #   SIGNING_PRIVATE_KEY_PATH: /app/certs/private_key.pem # Optional if using default
+        #   SIGNING_CERTIFICATE_PATH: /app/certs/certificate_base64.txt # Optional if using default
+        volumes:
+          - ./certs:/app/certs:ro # Mounts local ./certs to /app/certs in container
+          # Add other volumes as needed
     ```
+    *Make sure your local `./certs` directory (relative to `docker-compose.yml`) contains `private_key.pem` and `certificate_base64.txt`.*
+    If you set `SIGNING_PRIVATE_KEY_PATH` or `SIGNING_CERTIFICATE_PATH` in your `.env` file, those paths must be valid *inside the container* and you must ensure the files are mounted to those specific locations.
+
 3.  **Run Docker Compose:**
-    Navigate to the project root (`myinvois-gateway/`) where `docker-compose.yml` is located.
-
-    To build images (if necessary) and start services:
-
-    ```bash
-    docker compose up --build
-    ```
-
-    To run in detached mode:
-
+    From the project root (`myinvois-gateway/`):
     ```bash
     docker compose up --build -d
     ```
-
-    The application will be available at `http://localhost:3000`. The Redis service will also be started and accessible to the application container at `redis://redis:6379`.
+    The application will be available at `http://localhost:3000`.
 
 4.  **Stopping Docker Compose:**
-
     ```bash
     docker compose down
-    ```
-
-    To stop and remove volumes (e.g., Redis data):
-
-    ```bash
-    docker compose down -v
     ```
 
 ## API Documentation
@@ -224,38 +260,16 @@ Once the application is running, API documentation (Swagger UI) can be accessed 
 
 ### API Key Security and Usage
 
-The `GATEWAY_API_KEY` is **optional**. If you choose to set one, it is used to protect your MyInvois Gateway instance from unauthorized access. If it's not set, the gateway will operate without API key authentication, meaning any client that can reach the gateway can use it. **This is not recommended for production environments or publicly accessible instances unless access is strictly controlled by other means (e.g., firewall, VPC).**
-
-If you use a `GATEWAY_API_KEY`, here are some important considerations:
+The `GATEWAY_API_KEY` is **optional**. If you choose to set one, it is used to protect your MyInvois Gateway instance from unauthorized access. If it's not set, the gateway will operate without API key authentication. **This is not recommended for production environments unless access is strictly controlled by other means (e.g., firewall, VPC).**
 
 **Security Best Practices (When Using `GATEWAY_API_KEY`):**
-
-- **Strong, Unique Key:** Generate a strong, random, and unique API key. Avoid easily guessable keys.
-  - **How to Generate:** You can use various tools to generate a secure key. Here are a couple of examples:
-    - **Using OpenSSL (command line):**
-      ```bash
-      openssl rand -hex 32
-      ```
-      This command generates a 32-byte (64-character) hexadecimal string.
-    - **Using a Password Manager:** Most password managers have a secure password/passphrase generator that can create long, random strings.
-    - **Online Generators:** Be cautious with online generators; ensure they are reputable and generate keys client-side if possible.
-- **Environment Variables:** Always provide the `GATEWAY_API_KEY` via an environment variable (as shown in the `.env` setup or Docker configurations). Do not hardcode it.
-- **Limit Exposure:** Only provide this key to trusted client applications that need to interact with the gateway.
-
-**Why a Simple API Key (If Chosen)?**
-
-When a `GATEWAY_API_KEY` is configured, this gateway is primarily designed to act as a middleware component, often in a server-to-server communication scenario within a trusted network or for backend services. In such controlled environments:
-
-1.  **Simplicity:** A static API key passed in a header (`X-API-KEY`) is a straightforward and widely understood authentication mechanism, reducing complexity for both the gateway and its client applications.
-2.  **Controlled Access (with API Key):** If an API key is used, it adds an application-level authorization layer. It's still highly recommended that access to the gateway is restricted at the network level (e.g., firewall rules, private networks, VPCs).
-3.  **No User Context:** The gateway itself doesn't manage individual user accounts or sessions. It processes requests based on the provided credentials for the MyInvois service (`CLIENT_ID`, `CLIENT_SECRET`). If a `GATEWAY_API_KEY` is used, it authorizes the _calling application_.
-4.  **Focus:** The gateway's main purpose is to simplify interaction with the MyInvois API, not to be a comprehensive identity and access management solution.
+- **Strong, Unique Key:** Generate using tools like `openssl rand -hex 32`.
+- **Environment Variables:** Always provide via an environment variable. Do not hardcode.
+- **Limit Exposure:** Only provide to trusted client applications.
 
 ## License
 
 This project is licensed under the GNU General Public License v3.0.
-
-A copy of the license is included in the repository in the `LICENSE.md` file.
-
+A copy of the license is included in the `LICENSE.md` file.
 The canonical source code for MyInvois Gateway is available at:
 [myinvois-gateway](https://github.com/farhan-syah/myinvois-gateway)

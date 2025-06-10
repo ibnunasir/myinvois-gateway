@@ -41,7 +41,7 @@ This application requires the following environment variables:
 
 - `CLIENT_ID`: Your MyInvois Client ID.
 - `CLIENT_SECRET`: Your MyInvois Client Secret.
-- `GATEWAY_API_KEY`: An API key you define to protect access to the gateway. This key must be sent in the `X-API-KEY` header for all requests to the gateway.
+- `GATEWAY_API_KEY` (Optional): An API key you can define to protect access to the gateway. If provided, this key must be sent in the `X-API-KEY` header for all requests to the gateway. If not set, the gateway will be accessible without an API key (not recommended for production or publicly accessible instances).
 - `REDIS_URL` (Optional): The connection URL for Redis (e.g., `redis://localhost:6379` for local development, or `redis://redis:6379` when using Docker Compose). If not provided, the application will run without Redis caching.
 
 **Setup:**
@@ -51,7 +51,7 @@ Create a `.env` file in the root of the project (`myinvois-gateway/.env`) and ad
 ```env
 CLIENT_ID=your_client_id_here
 CLIENT_SECRET=your_client_secret_here
-GATEWAY_API_KEY=your_gateway_api_key_here
+# GATEWAY_API_KEY=your_gateway_api_key_here # Optional: Define to secure the gateway. If omitted, the gateway will be unprotected.
 # REDIS_URL=redis://localhost:6379 # Optional: for local Bun development if using local Redis
 ```
 
@@ -133,7 +133,7 @@ Then, skip to step 2 (Run the Docker container), ensuring you use `farhansyah/my
     docker run -d \
       -e CLIENT_ID="your_client_id_here" \
       -e CLIENT_SECRET="your_client_secret_here" \
-      -e GATEWAY_API_KEY="your_gateway_api_key_here" \
+      # -e GATEWAY_API_KEY="your_gateway_api_key_here" \ # Optional: Define to secure the gateway
       -e REDIS_URL="redis://<your_redis_host>:<your_redis_port>" \ # Optional: for Redis caching
       -p 3000:3000 \
       --name myinvois_gateway \
@@ -147,7 +147,7 @@ Then, skip to step 2 (Run the Docker container), ensuring you use `farhansyah/my
     docker run -d \
       -e CLIENT_ID="your_client_id_here" \
       -e CLIENT_SECRET="your_client_secret_here" \
-      -e GATEWAY_API_KEY="your_gateway_api_key_here" \
+      # -e GATEWAY_API_KEY="your_gateway_api_key_here" \ # Optional: Define to secure the gateway
       -e REDIS_URL="redis://<your_redis_host>:<your_redis_port>" \ # Optional: for Redis caching
       -p 3000:3000 \
       --name myinvois_gateway \
@@ -155,6 +155,7 @@ Then, skip to step 2 (Run the Docker container), ensuring you use `farhansyah/my
     ```
 
     - Replace placeholder values for `CLIENT_ID` and `CLIENT_SECRET`.
+    - If you are using a `GATEWAY_API_KEY`, uncomment and set that line.
     - The `-d` flag runs the container in detached mode.
     - Access the application at `http://localhost:3000`.
     - To see logs: `docker logs myinvois_gateway`
@@ -166,11 +167,11 @@ Then, skip to step 2 (Run the Docker container), ensuring you use `farhansyah/my
 This is the recommended method for a consistent development and testing environment, as it manages both the application and Redis services.
 
 1.  **Ensure Docker Compose is installed.**
-2.  **Create/Verify `.env` file:** Make sure you have a `.env` file in the project root (`myinvois-gateway/.env`) with your `CLIENT_ID`, `CLIENT_SECRET`, and `GATEWAY_API_KEY`. The `REDIS_URL` will be handled by Docker Compose to point to its own Redis service.
+2.  **Create/Verify `.env` file:** Make sure you have a `.env` file in the project root (`myinvois-gateway/.env`) with your `CLIENT_ID` and `CLIENT_SECRET`. The `GATEWAY_API_KEY` is optional; if you choose to use one, add it here. The `REDIS_URL` will be handled by Docker Compose to point to its own Redis service.
     ```env
     CLIENT_ID=your_client_id_here
     CLIENT_SECRET=your_client_secret_here
-    GATEWAY_API_KEY=your_gateway_api_key_here
+    # GATEWAY_API_KEY=your_gateway_api_key_here # Optional: Define to secure the gateway
     ```
 3.  **Run Docker Compose:**
     Navigate to the project root (`myinvois-gateway/`) where `docker-compose.yml` is located.
@@ -209,9 +210,11 @@ Once the application is running, API documentation (Swagger UI) can be accessed 
 
 ### API Key Security and Usage
 
-The `GATEWAY_API_KEY` is used to protect your MyInvois Gateway instance from unauthorized access. Here are some important considerations:
+The `GATEWAY_API_KEY` is **optional**. If you choose to set one, it is used to protect your MyInvois Gateway instance from unauthorized access. If it's not set, the gateway will operate without API key authentication, meaning any client that can reach the gateway can use it. **This is not recommended for production environments or publicly accessible instances unless access is strictly controlled by other means (e.g., firewall, VPC).**
 
-**Security Best Practices:**
+If you use a `GATEWAY_API_KEY`, here are some important considerations:
+
+**Security Best Practices (When Using `GATEWAY_API_KEY`):**
 
 - **Strong, Unique Key:** Generate a strong, random, and unique API key. Avoid easily guessable keys.
   - **How to Generate:** You can use various tools to generate a secure key. Here are a couple of examples:
@@ -222,19 +225,17 @@ The `GATEWAY_API_KEY` is used to protect your MyInvois Gateway instance from una
       This command generates a 32-byte (64-character) hexadecimal string.
     - **Using a Password Manager:** Most password managers have a secure password/passphrase generator that can create long, random strings.
     - **Online Generators:** Be cautious with online generators; ensure they are reputable and generate keys client-side if possible.
-- **Environment Variables:** Always provide the `GATEWAY_API_KEY` via an environment variable (as shown in the `.env` setup or Docker configurations).
+- **Environment Variables:** Always provide the `GATEWAY_API_KEY` via an environment variable (as shown in the `.env` setup or Docker configurations). Do not hardcode it.
 - **Limit Exposure:** Only provide this key to trusted client applications that need to interact with the gateway.
 
-**Why a Simple API Key?**
+**Why a Simple API Key (If Chosen)?**
 
-This gateway is primarily designed to act as a middleware component, often in a server-to-server communication scenario within a trusted network or for backend services. In such controlled environments:
+When a `GATEWAY_API_KEY` is configured, this gateway is primarily designed to act as a middleware component, often in a server-to-server communication scenario within a trusted network or for backend services. In such controlled environments:
 
 1.  **Simplicity:** A static API key passed in a header (`X-API-KEY`) is a straightforward and widely understood authentication mechanism, reducing complexity for both the gateway and its client applications.
-2.  **Controlled Access:** It's assumed that access to the gateway is already restricted at the network level (e.g., firewall rules, private networks, VPCs). The API key adds an additional layer of application-level authorization.
-3.  **No User Context:** The gateway itself doesn't manage individual user accounts or sessions. It processes requests based on the provided credentials for the MyInvois service (`CLIENT_ID`, `CLIENT_SECRET`) and authorizes the _calling application_ via the `GATEWAY_API_KEY`.
+2.  **Controlled Access (with API Key):** If an API key is used, it adds an application-level authorization layer. It's still highly recommended that access to the gateway is restricted at the network level (e.g., firewall rules, private networks, VPCs).
+3.  **No User Context:** The gateway itself doesn't manage individual user accounts or sessions. It processes requests based on the provided credentials for the MyInvois service (`CLIENT_ID`, `CLIENT_SECRET`). If a `GATEWAY_API_KEY` is used, it authorizes the _calling application_.
 4.  **Focus:** The gateway's main purpose is to simplify interaction with the MyInvois API, not to be a comprehensive identity and access management solution.
-
-For scenarios requiring more sophisticated authentication or authorization (e.g., per-user permissions, OAuth2 flows), you would typically implement those in the client applications calling this gateway, or introduce an additional dedicated API management layer in front of this gateway if exposing it more broadly.
 
 ## License
 

@@ -9,16 +9,13 @@ import { CONFIG } from "./config";
 
 async function startServer() {
   // Check for essential non-Redis environment variables first
-  if (
-    !process.env.CLIENT_ID ||
-    !process.env.CLIENT_SECRET ||
-    !process.env.GATEWAY_API_KEY
-  ) {
+  if (!process.env.CLIENT_ID || !process.env.CLIENT_SECRET) {
     console.error(
-      "CLIENT_ID, CLIENT_SECRET, and GATEWAY_API_KEY must be defined in the environment variables"
+      "CLIENT_ID and CLIENT_SECRET must be defined in the environment variables"
     );
     process.exit(1);
   }
+  const GATEWAY_API_KEY = process.env.GATEWAY_API_KEY;
 
   let connectedRedisInstance: typeof redisInstance | null = null;
   if (process.env.REDIS_URL) {
@@ -79,26 +76,40 @@ Use this gateway to easily submit invoices, credit notes, or debit notes from an
             { name: "Taxpayers", description: "Taxpayers endpoints" },
           ],
           components: {
-            securitySchemes: {
-              apiKeyAuth: {
-                type: "apiKey",
-                name: "X-API-KEY",
-                in: "header",
-              },
-            },
+            ...(GATEWAY_API_KEY
+              ? {
+                  securitySchemes: {
+                    apiKeyAuth: {
+                      type: "apiKey",
+                      name: "X-API-KEY",
+                      in: "header",
+                    },
+                  },
+                }
+              : {}),
           },
         },
         swaggerOptions: {
           defaultModelRendering: "model",
         },
       })
-    )
-    .onBeforeHandle(({ request, set }) => {
+    );
+
+  if (GATEWAY_API_KEY) {
+    app.onBeforeHandle(({ request, set }) => {
+      const excludedPaths = new Set([
+        "/", // Exclude the main page
+        "/docs/api", // Exclude the Swagger UI base path
+        "/docs/api/", // Exclude Swagger UI base path with trailing slash
+        "/docs/api/json", // Exclude the path for the Swagger JSON spec
+      ]);
+
+      if (excludedPaths.has(new URL(request.url).pathname)) {
+        return; // Skip API key check for paths in the excluded list
+      }
+
       const apiKey = request.headers.get("X-API-KEY");
-      if (
-        !process.env.GATEWAY_API_KEY ||
-        apiKey !== process.env.GATEWAY_API_KEY
-      ) {
+      if (apiKey !== GATEWAY_API_KEY) {
         set.status = 401;
         return {
           error:
@@ -106,6 +117,7 @@ Use this gateway to easily submit invoices, credit notes, or debit notes from an
         };
       }
     });
+  }
 
   app.get(
     "/",

@@ -57,6 +57,14 @@ CLIENT_SECRET=your_client_secret_here
 
 This `.env` file will be automatically used by `bun run dev`, when running the compiled binary locally (if your application loads it, typically via a library like `dotenv` which Bun might handle implicitly for `process.env`), and by Docker Compose if it's in the same directory.
 
+## Document Signing Configuration
+
+To enable document signing (required for e-Invoice v1.1), you need to provide your private key and signing certificate via environment variables. Detailed instructions on how to configure signing, including required formats and how to convert credentials from `.p12` files, can be found in:
+
+- [instructions/adding_signature.md](instructions/adding_signature.md)
+
+Please refer to this file for necessary environment variables (`SIGNING_PRIVATE_KEY_PEM` and `SIGNING_CERTIFICATE_BASE64`) and guidance on preparing your key and certificate.
+
 ## Running the Application
 
 You can run the application in several ways:

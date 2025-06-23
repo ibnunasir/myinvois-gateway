@@ -1,0 +1,58 @@
+name: Release Binaries
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    name: Build and package (${{ matrix.os }})
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build binary
+        run: |
+          if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
+            bun run build:linux
+          else
+            bun run build:windows
+          fi
+        shell: bash
+
+      - name: Prepare release folder
+        run: |
+          mkdir -p bin release
+          cp -R public bin/public
+          cp .env.example bin/.env.example || true
+          cp release/README.txt bin/README.txt || true
+        shell: bash
+
+      - name: Package binary
+        run: |
+          if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
+            (cd bin && zip ../release/myinvois-gateway-linux-v${{ github.event.release.tag_name }}.zip myinvois-gateway public .env.example README.txt -r)
+          else
+            (cd bin && zip ../release/myinvois-gateway-windows-v${{ github.event.release.tag_name }}.zip myinvois-gateway.exe public .env.example README.txt -r)
+          fi
+        shell: bash
+
+      - name: Upload Release Asset
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            release/*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 

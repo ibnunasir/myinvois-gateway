@@ -44,9 +44,9 @@ jobs:
       - name: Package binary
         run: |
           if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
-            (cd bin && zip ../release/myinvois-gateway-linux-v${{ github.event.release.tag_name }}.zip myinvois-gateway public .env.example README.txt -r)
+            (cd bin && zip ../release/myinvois-gateway-linux-${{ github.event.release.tag_name }}.zip myinvois-gateway public .env.example README.txt -r)
           else
-            (cd bin && zip ../release/myinvois-gateway-windows-v${{ github.event.release.tag_name }}.zip myinvois-gateway.exe public .env.example README.txt -r)
+            (cd bin && zip ../release/myinvois-gateway-windows-${{ github.event.release.tag_name }}.zip myinvois-gateway.exe public .env.example README.txt -r)
           fi
         shell: bash
 

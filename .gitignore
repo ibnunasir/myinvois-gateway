@@ -44,3 +44,7 @@ package-lock.json
 .env
 bin
 certs
+
+# Ignore all files in release/ except README.txt and zip packages
+release/*
+!release/README.txt

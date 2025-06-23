@@ -126,29 +126,28 @@ This method uses Bun to run the application directly from the source code with h
     ```
     The application will typically be available at `http://localhost:3000`.
 
-### 2. Local Production Build (Binary)
+### 2. Local Production Run (Using Released Binary)
 
-This method compiles the application into a standalone executable using Bun, which you can then run.
+This method uses the pre-built, released binary from the `release/` folder. You do not need to build from source.
 
-1.  **Install dependencies:**
-    ```bash
-    bun install
-    ```
-2.  **Set environment variables:** Ensure your `.env` file is configured or set them in your shell. For signing, ensure your key and certificate files are accessible (e.g., in a `certs` directory alongside the binary if using relative default paths from the binary's location, or use absolute paths in environment variables).
-3.  **Build the application:**
-    ```bash
-    bun run build
-    ```
-    This will create an executable file named `server` in the project root.
-4.  **Run the executable:**
-    ```bash
-    # Make sure environment variables are set in your current shell
-    # or that the application loads them from .env.
-    # If using default certs paths, ensure the 'certs' directory is relative to where 'server' is run.
-    # e.g., if 'server' is in myinvois-gateway/, then 'certs/' should also be in myinvois-gateway/
-    ./server
-    ```
-    The application will be available at `http://localhost:3000`.
+1.  **Download and extract the release zip:**
+    - Locate the appropriate zip file in the `release/` folder (e.g., `myinvois-gateway-linux-v1.0.0.zip`).
+    - Extract it to your desired location:
+      ```bash
+      unzip release/myinvois-gateway-linux-v1.0.0.zip -d myinvois-gateway-bin
+      cd myinvois-gateway-bin
+      ```
+2.  **Set environment variables:**
+    - Ensure your `.env` file is present in the extracted directory (or set environment variables in your shell). For signing, ensure your key and certificate files are accessible (e.g., in a `certs` directory alongside the binary if using default paths, or use absolute paths in environment variables).
+3.  **Run the executable:**
+    - On Linux:
+      ```bash
+      ./myinvois-gateway
+      ```
+    - On Windows, run `myinvois-gateway.exe`.
+    - The application will be available at `http://localhost:3000`.
+
+> See the included `README.txt` in the extracted folder for any release-specific notes.
 
 ### 3. Using Docker
 

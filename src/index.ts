@@ -1,7 +1,6 @@
 import swagger from "@elysiajs/swagger";
 import { Elysia } from "elysia";
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import staticPlugin from "@elysiajs/static";
 import { connectAndInitializeRedis, type redisInstance } from "./redis"; // Import new function and instance
 import { controllers } from "./routes";
 import { errorHandler } from "./utils/error-handler";
@@ -60,7 +59,13 @@ Use this gateway to easily submit invoices, credit notes, or debit notes from an
 
   const app = new Elysia()
     .use(() => errorHandler)
-
+    .use(
+      staticPlugin({
+        assets: "public", // Serve from the 'public' directory
+        prefix: "", // Serve at the root (e.g., /index.html)
+        indexHTML: true, // Serve public/index.html for '/' requests
+      })
+    )
     .use(
       swagger({
         path: "/docs/api",
@@ -97,15 +102,20 @@ Use this gateway to easily submit invoices, credit notes, or debit notes from an
 
   if (GATEWAY_API_KEY) {
     app.onBeforeHandle(({ request, set }) => {
+      const requestPath = new URL(request.url).pathname;
+      // Requests for static assets (like /index.html served for / by indexHTML: true)
+      // are typically handled by the static plugin before this hook.
+      // We still exclude API docs explicitly.
       const excludedPaths = new Set([
-        "/", // Exclude the main page
+        "/", // Exclude the main page (index.html)
         "/docs/api", // Exclude the Swagger UI base path
         "/docs/api/", // Exclude Swagger UI base path with trailing slash
         "/docs/api/json", // Exclude the path for the Swagger JSON spec
       ]);
 
-      if (excludedPaths.has(new URL(request.url).pathname)) {
-        return; // Skip API key check for paths in the excluded list
+      // If the path is for root (index.html) or other excluded paths, skip API key check.
+      if (excludedPaths.has(requestPath)) {
+        return;
       }
 
       const apiKey = request.headers.get("X-API-KEY");
@@ -119,28 +129,7 @@ Use this gateway to easily submit invoices, credit notes, or debit notes from an
     });
   }
 
-  app.get(
-    "/",
-    () => {
-      try {
-        const htmlFilePath = join(__dirname, "static", "index.html");
-        const htmlContent = readFileSync(htmlFilePath, "utf-8");
-        return new Response(htmlContent, {
-          headers: { "Content-Type": "text/html" },
-        });
-      } catch (error) {
-        console.error("Error reading index.html:", error);
-        return new Response(
-          "Could not load the page. Please try again later.",
-          {
-            status: 500,
-            headers: { "Content-Type": "text/plain" },
-          }
-        );
-      }
-    },
-    { detail: { hide: true } }
-  );
+  // The @elysiajs/static plugin with indexHTML: true will handle serving index.html for "/"
 
   controllers.forEach((controller: any) => {
     app.use(controller);

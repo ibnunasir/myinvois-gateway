@@ -48,3 +48,4 @@ certs
 # Ignore all files in release/ except README.txt and zip packages
 release/*
 !release/README.txt
+!release/RELEASE_TEMPLATE.md

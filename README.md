@@ -128,15 +128,16 @@ This method uses Bun to run the application directly from the source code with h
 
 ### 2. Local Production Run (Using Released Binary)
 
-This method uses the pre-built, released binary from the `release/` folder. You do not need to build from source.
+This method uses the pre-built, released binary. **Recommended:** Download the latest zip from the [GitHub Releases page](https://github.com/farhan-syah/myinvois-gateway/releases). You do not need to build from source unless you want a custom build.
 
 1.  **Download and extract the release zip:**
-    - Locate the appropriate zip file in the `release/` folder (e.g., `myinvois-gateway-linux-v1.0.0.zip`).
+    - Go to the [GitHub Releases page](https://github.com/farhan-syah/myinvois-gateway/releases) and download the appropriate zip for your platform (e.g., `myinvois-gateway-linux-v1.0.0.zip`).
     - Extract it to your desired location:
       ```bash
-      unzip release/myinvois-gateway-linux-v1.0.0.zip -d myinvois-gateway-bin
+      unzip myinvois-gateway-linux-v1.0.0.zip -d myinvois-gateway-bin
       cd myinvois-gateway-bin
       ```
+    - If you built from source, you can also find the zip in the local `release/` folder after running the packaging script.
 2.  **Set environment variables:**
     - Ensure your `.env` file is present in the extracted directory (or set environment variables in your shell). For signing, ensure your key and certificate files are accessible (e.g., in a `certs` directory alongside the binary if using default paths, or use absolute paths in environment variables).
 3.  **Run the executable:**

@@ -16,6 +16,7 @@
   "dependencies": {
     "@elysiajs/static": "^1.3.0",
     "@elysiajs/swagger": "^1.3.0",
+    "@elysiajs/cors": "^1.3.0",
     "elysia": "latest",
     "myinvois-client": "^1.2.0"
   },

@@ -26,6 +26,7 @@ Use this gateway to easily submit invoices, credit notes, or debit notes from an
 - **Document Signing:** Manages the document signing process with flexible configuration.
 - **Optional Redis Caching:** Improves performance and reliability by caching responses.
 - **Developer-Friendly API Docs:** Interactive API documentation available via Swagger UI.
+- **Browser Friendly (CORS):** Allows requests from any origin so browser apps can call the gateway.
 
 The API documentation (Swagger UI) is available at `/docs/api` when the application is running.
 

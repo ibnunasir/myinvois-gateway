@@ -1,6 +1,7 @@
 import swagger from "@elysiajs/swagger";
 import { Elysia } from "elysia";
 import staticPlugin from "@elysiajs/static";
+import cors from "@elysiajs/cors";
 import { connectAndInitializeRedis, type redisInstance } from "./redis"; // Import new function and instance
 import { controllers } from "./routes";
 import { errorHandler } from "./utils/error-handler";
@@ -59,6 +60,7 @@ Use this gateway to easily submit invoices, credit notes, or debit notes from an
 
   const app = new Elysia()
     .use(() => errorHandler)
+    .use(cors({ origin: "*" }))
     .use(
       staticPlugin({
         assets: "public", // Serve from the 'public' directory

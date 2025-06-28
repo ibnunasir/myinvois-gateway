@@ -5,6 +5,7 @@ import { connectAndInitializeRedis, type redisInstance } from "./redis"; // Impo
 import { controllers } from "./routes";
 import { errorHandler } from "./utils/error-handler";
 import { CONFIG } from "./config";
+import cors from "@elysiajs/cors";
 
 async function startServer() {
   // Check for essential non-Redis environment variables first
@@ -135,6 +136,7 @@ Use this gateway to easily submit invoices, credit notes, or debit notes from an
     app.use(controller);
   });
 
+  app.use(cors());
   app.listen(CONFIG.port);
 
   console.log(`MyInvois Gateway is running at ${app.server?.url}`);

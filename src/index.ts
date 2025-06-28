@@ -61,20 +61,13 @@ Use this gateway to easily submit invoices, credit notes, or debit notes from an
   const app = new Elysia()
     .use(() => errorHandler)
     .use(
-      staticPlugin({
-        assets: "public", // Serve from the 'public' directory
-        prefix: "", // Serve at the root (e.g., /index.html)
-        indexHTML: true, // Serve public/index.html for '/' requests
-      })
-    )
-    .use(
       swagger({
         path: "/docs/api",
         documentation: {
           info: {
             title: "MyInvois Gateway API Documentation",
             description: swaggerDescription,
-            version: process.env.npm_package_version ?? "-",
+            version: process.env.npm_package_version ?? "dev",
           },
           tags: [
             { name: "Documents", description: "Documents endpoints" },
@@ -98,6 +91,14 @@ Use this gateway to easily submit invoices, credit notes, or debit notes from an
         swaggerOptions: {
           defaultModelRendering: "model",
         },
+      })
+    )
+    .use(
+      staticPlugin({
+        assets: "public", // Serve from the 'public' directory
+        prefix: "", // Serve at the root (e.g., /index.html)
+        indexHTML: true, // Serve public/index.html for '/' requests
+        ignorePatterns: [/^\/docs\/api\/json$/, /^\/docs\/api$/], // 👈
       })
     );
 

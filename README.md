@@ -261,6 +261,12 @@ Authorization: Bearer <access_token>
 Accept: application/json
 ```
 
+When calling through this gateway:
+
+```
+GET /documents/{uuid}/raw
+```
+
 See the [LHDN API documentation](https://sdk.myinvois.hasil.gov.my/einvoicingapi/07-get-document/)
 for more details.
 

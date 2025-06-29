@@ -105,6 +105,36 @@ export async function getDocumentDetails(
   }
 }
 
+export async function getDocumentRaw(
+  params: GetDocumentDetailsRequestParams,
+  query: GetDocumentDetailsRequestQuery
+) {
+  const client = new MyInvoisClient(
+    CONFIG.clientId,
+    CONFIG.clientSecret,
+    CONFIG.env,
+    redisInstance
+  );
+
+  const documentId = params.id;
+  const taxpayerTIN = query.taxpayerTIN;
+
+  try {
+    // Uses the underlying client to call the official
+    // `/api/v1.0/documents/{uuid}/raw` endpoint.
+    const rawDocument = await client.documents.getDocumentRawByUuid(
+      documentId,
+      taxpayerTIN
+    );
+    return rawDocument;
+  } catch (error) {
+    const action = taxpayerTIN
+      ? `fetching raw document for ID ${documentId} for TIN ${taxpayerTIN}`
+      : `fetching raw document for ID ${documentId} as taxpayer`;
+    throw new MyInvoisError(`Failed during ${action}`, error);
+  }
+}
+
 export async function searchDocuments(query: SearchDocumentsRequestQuery) {
   const client = new MyInvoisClient(
     CONFIG.clientId,

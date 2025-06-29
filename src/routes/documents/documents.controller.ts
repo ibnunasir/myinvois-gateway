@@ -6,6 +6,7 @@ import {
   rejectDocument,
   searchDocuments,
   getDocumentDetails,
+  getDocumentRaw,
   submitCreditNotes,
   submitDebitNotes,
   submitRefundNotes,
@@ -116,6 +117,21 @@ export const documentsController = (app: Elysia) => {
           params: GetDocumentDetailsRequestParamsSchema,
           query: GetDocumentDetailsRequestQuerySchema,
           // No response schema specified by user
+        }
+      )
+      .get(
+        "/:id/raw",
+        async ({ params, query }) => {
+          return await getDocumentRaw(params, query);
+        },
+        {
+          detail: {
+            summary: "Get Raw Document",
+            description:
+              "Fetches the raw document payload stored in MyInvois for the provided UUID.",
+          },
+          params: GetDocumentDetailsRequestParamsSchema,
+          query: GetDocumentDetailsRequestQuerySchema,
         }
       )
       .put(

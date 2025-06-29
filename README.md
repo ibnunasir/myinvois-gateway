@@ -250,6 +250,20 @@ Once the application is running, API documentation (Swagger UI) can be accessed 
 
 ![2025-06-10_18-43](https://github.com/user-attachments/assets/de187a81-d409-4980-a88b-13e4e3d35f51)
 
+### Retrieving Raw Document Data
+
+To inspect the full invoice (including item lines) stored by LHDN, call the
+official "Get Document" endpoint using the invoice UUID:
+
+```http
+GET /api/v1.0/documents/{uuid}/raw
+Authorization: Bearer <access_token>
+Accept: application/json
+```
+
+See the [LHDN API documentation](https://sdk.myinvois.hasil.gov.my/einvoicingapi/07-get-document/)
+for more details.
+
 ### API Key Security and Usage
 
 The `GATEWAY_API_KEY` is **optional**. If you choose to set one, it is used to protect your MyInvois Gateway instance from unauthorized access. If it's not set, the gateway will operate without API key authentication. **This is not recommended for production environments unless access is strictly controlled by other means (e.g., firewall, VPC).**

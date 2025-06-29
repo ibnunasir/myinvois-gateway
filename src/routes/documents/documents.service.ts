@@ -52,6 +52,17 @@ import type {
 import { getSignatureParams } from "src/utils/signature";
 import { MyInvoisError } from "src/utils/error-handler";
 
+function normalizeInvoiceLines(document: any) {
+  if (!document?.Invoice) return;
+  const invoice = document.Invoice;
+  if (invoice.invoiceLines) return;
+  const lines =
+    invoice["cac:InvoiceLine"] ?? invoice["InvoiceLine"] ?? invoice.cacInvoiceLine;
+  if (lines) {
+    invoice.invoiceLines = lines;
+  }
+}
+
 export async function getRecentDocuments(
   query: GetRecentDocumentsRequestQuery
 ) {
@@ -96,6 +107,9 @@ export async function getDocumentDetails(
       documentId,
       taxpayerTIN // Pass taxpayerTIN if provided, client method should handle undefined
     );
+    if (documentDetails && typeof documentDetails === "object") {
+      normalizeInvoiceLines((documentDetails as any).document);
+    }
     return documentDetails;
   } catch (error) {
     const action = taxpayerTIN

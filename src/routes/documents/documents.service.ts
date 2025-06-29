@@ -55,11 +55,20 @@ import { MyInvoisError } from "src/utils/error-handler";
 function normalizeInvoiceLines(document: any) {
   if (!document?.Invoice) return;
   const invoice = document.Invoice;
-  if (invoice.invoiceLines) return;
+
   const lines =
-    invoice["cac:InvoiceLine"] ?? invoice["InvoiceLine"] ?? invoice.cacInvoiceLine;
+    invoice["cac:InvoiceLine"] ??
+    invoice.InvoiceLine ??
+    invoice.invoiceLines ??
+    invoice.cacInvoiceLine;
+
   if (lines) {
-    invoice.invoiceLines = lines;
+    if (!invoice["cac:InvoiceLine"]) {
+      invoice["cac:InvoiceLine"] = lines;
+    }
+    if (!invoice.invoiceLines) {
+      invoice.invoiceLines = lines;
+    }
   }
 }
 

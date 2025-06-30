@@ -48,6 +48,8 @@ import type {
   SubmitSelfBilledInvoiceDocumentsQuery,
   SubmitSelfBilledRefundNoteDocumentsBody,
   SubmitSelfBilledRefundNoteDocumentsQuery,
+  GetDocumentRequestParams,
+  GetDocumentRequestQuery,
 } from "src/schemes";
 import { getSignatureParams } from "src/utils/signature";
 import { MyInvoisError } from "src/utils/error-handler";
@@ -101,6 +103,34 @@ export async function getDocumentDetails(
     const action = taxpayerTIN
       ? `fetching document details for ID ${documentId} for TIN ${taxpayerTIN}`
       : `fetching document details for ID ${documentId} as taxpayer`;
+    throw new MyInvoisError(`Failed during ${action}`, error);
+  }
+}
+
+export async function getDocument(
+  params: GetDocumentRequestParams,
+  query: GetDocumentRequestQuery
+) {
+  const client = new MyInvoisClient(
+    CONFIG.clientId,
+    CONFIG.clientSecret,
+    CONFIG.env,
+    redisInstance
+  );
+
+  const documentId = params.id;
+  const taxpayerTIN = query.taxpayerTIN;
+
+  try {
+    const document = await client.documents.getDocumentByUuid(
+      documentId,
+      taxpayerTIN
+    );
+    return document;
+  } catch (error) {
+    const action = taxpayerTIN
+      ? `fetching document ${documentId} for TIN ${taxpayerTIN}`
+      : `fetching document ${documentId} as taxpayer`;
     throw new MyInvoisError(`Failed during ${action}`, error);
   }
 }

@@ -5,6 +5,7 @@ import {
   cancelDocument,
   rejectDocument,
   searchDocuments,
+  getDocument,
   getDocumentDetails,
   submitCreditNotes,
   submitDebitNotes,
@@ -40,6 +41,8 @@ import {
   SubmitSelfBilledInvoiceDocumentsQueryScheme,
   SubmitSelfBilledRefundNoteDocumentsBodyScheme,
   SubmitSelfBilledRefundNoteDocumentsQueryScheme,
+  GetDocumentRequestParamsSchema,
+  GetDocumentRequestQuerySchema,
 } from "src/schemes";
 
 export const documentsController = (app: Elysia) => {
@@ -98,6 +101,20 @@ export const documentsController = (app: Elysia) => {
           },
           params: RejectDocumentRequestParamsSchema,
           query: RejectDocumentRequestQuerySchema,
+        }
+      )
+      .get(
+        "/:id/raw",
+        async ({ params, query }) => {
+          return await getDocument(params, query);
+        },
+        {
+          detail: {
+            summary: "Get Document",
+            description: `Retrieve the raw document payload from MyInvois.`,
+          },
+          params: GetDocumentRequestParamsSchema,
+          query: GetDocumentRequestQuerySchema,
         }
       )
       .get(

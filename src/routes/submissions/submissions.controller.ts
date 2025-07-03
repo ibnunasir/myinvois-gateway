@@ -15,8 +15,8 @@ export const submissionsController = (app: Elysia) => {
       })
       .get(
         "/:id",
-        async ({ params, query }) => {
-          return await getSubmissionDetails(params, query);
+        async ({ params, query, request }) => {
+          return await getSubmissionDetails(params, query, request.headers);
         },
         {
           detail: {

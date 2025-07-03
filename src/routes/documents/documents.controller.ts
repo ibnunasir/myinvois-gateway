@@ -55,8 +55,8 @@ export const documentsController = (app: Elysia) => {
       })
       .get(
         "/",
-        ({ query }) => {
-          return getRecentDocuments(query);
+        ({ query, request }) => {
+          return getRecentDocuments(query, request.headers);
         },
         {
           detail: {
@@ -73,8 +73,8 @@ export const documentsController = (app: Elysia) => {
 
       .put(
         "/:id/cancel",
-        ({ params, query }) => {
-          return cancelDocument(params, query);
+        ({ params, query, request }) => {
+          return cancelDocument(params, query, request.headers);
         },
         {
           detail: {
@@ -89,8 +89,8 @@ export const documentsController = (app: Elysia) => {
       )
       .put(
         "/:id/reject",
-        ({ params, query }) => {
-          return rejectDocument(params, query);
+        ({ params, query, request }) => {
+          return rejectDocument(params, query, request.headers);
         },
         {
           detail: {
@@ -105,8 +105,8 @@ export const documentsController = (app: Elysia) => {
       )
       .get(
         "/:id/raw",
-        async ({ params, query }) => {
-          return await getDocument(params, query);
+        async ({ params, query, request }) => {
+          return await getDocument(params, query, request.headers);
         },
         {
           detail: {
@@ -119,8 +119,8 @@ export const documentsController = (app: Elysia) => {
       )
       .get(
         "/:id",
-        async ({ params, query }) => {
-          return await getDocumentDetails(params, query);
+        async ({ params, query, request }) => {
+          return await getDocumentDetails(params, query, request.headers);
         },
         {
           detail: {
@@ -137,8 +137,8 @@ export const documentsController = (app: Elysia) => {
       )
       .put(
         "search",
-        ({ query }) => {
-          return searchDocuments(query); // Call searchDocuments service
+        ({ query, request }) => {
+          return searchDocuments(query, request.headers); // Call searchDocuments service
         },
         {
           detail: {
@@ -153,8 +153,8 @@ export const documentsController = (app: Elysia) => {
       )
       .post(
         "submit/invoice",
-        ({ query, body }) => {
-          return submitInvoices(query, body);
+        ({ query, body, request }) => {
+          return submitInvoices(query, body, request.headers);
         },
         {
           detail: {
@@ -168,8 +168,8 @@ export const documentsController = (app: Elysia) => {
       )
       .post(
         "submit/credit-note",
-        ({ query, body }) => {
-          return submitCreditNotes(query, body);
+        ({ query, body, request }) => {
+          return submitCreditNotes(query, body, request.headers);
         },
         {
           detail: {
@@ -183,8 +183,8 @@ export const documentsController = (app: Elysia) => {
       )
       .post(
         "submit/debit-note",
-        ({ query, body }) => {
-          return submitDebitNotes(query, body);
+        ({ query, body, request }) => {
+          return submitDebitNotes(query, body, request.headers);
         },
         {
           detail: {
@@ -198,8 +198,8 @@ export const documentsController = (app: Elysia) => {
       )
       .post(
         "submit/refund-note",
-        ({ query, body }) => {
-          return submitRefundNotes(query, body);
+        ({ query, body, request }) => {
+          return submitRefundNotes(query, body, request.headers);
         },
         {
           detail: {
@@ -213,8 +213,8 @@ export const documentsController = (app: Elysia) => {
       )
       .post(
         "submit/self-billed-invoice",
-        ({ query, body }) => {
-          return submitSelfBilledInvoices(query, body);
+        ({ query, body, request }) => {
+          return submitSelfBilledInvoices(query, body, request.headers);
         },
         {
           detail: {
@@ -228,8 +228,8 @@ export const documentsController = (app: Elysia) => {
       )
       .post(
         "submit/self-billed-credit-note",
-        ({ query, body }) => {
-          return submitSelfBilledCreditNotes(query, body);
+        ({ query, body, request }) => {
+          return submitSelfBilledCreditNotes(query, body, request.headers);
         },
         {
           detail: {
@@ -243,8 +243,8 @@ export const documentsController = (app: Elysia) => {
       )
       .post(
         "submit/self-billed-debit-note",
-        ({ query, body }) => {
-          return submitSelfBilledDebitNotes(query, body);
+        ({ query, body, request }) => {
+          return submitSelfBilledDebitNotes(query, body, request.headers);
         },
         {
           detail: {
@@ -258,8 +258,8 @@ export const documentsController = (app: Elysia) => {
       )
       .post(
         "submit/self-billed-refund-note",
-        ({ query, body }) => {
-          return submitSelfBilledRefundNotes(query, body);
+        ({ query, body, request }) => {
+          return submitSelfBilledRefundNotes(query, body, request.headers);
         },
         {
           detail: {

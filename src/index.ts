@@ -73,19 +73,30 @@ Use this gateway to easily submit invoices, credit notes, or debit notes from an
             { name: "Documents", description: "Documents endpoints" },
             { name: "Submissions", description: "Submissions endpoints" },
             { name: "Taxpayers", description: "Taxpayers endpoints" },
+            { name: "Health", description: "Health endpoints" },
           ],
           components: {
-            ...(GATEWAY_API_KEY
-              ? {
-                  securitySchemes: {
+            securitySchemes: {
+              ...(GATEWAY_API_KEY
+                ? {
                     apiKeyAuth: {
                       type: "apiKey",
                       name: "X-API-KEY",
                       in: "header",
                     },
-                  },
-                }
-              : {}),
+                  }
+                : {}),
+              clientId: {
+                type: "apiKey",
+                name: "X-CLIENT-ID",
+                in: "header",
+              },
+              clientSecret: {
+                type: "apiKey",
+                name: "X-CLIENT-SECRET",
+                in: "header",
+              },
+            },
           },
         },
         swaggerOptions: {
@@ -136,6 +147,12 @@ Use this gateway to easily submit invoices, credit notes, or debit notes from an
   controllers.forEach((controller: any) => {
     app.use(controller);
   });
+
+  app.get(
+    "/health",
+    () => ({ status: "ok" }),
+    { detail: { tags: ["Health"], summary: "Health Check" } }
+  );
 
   app.use(cors());
   app.listen(CONFIG.port);

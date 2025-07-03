@@ -1,6 +1,7 @@
 import { CONFIG } from "src/config";
 import { redisInstance } from "src/redis";
 import { MyInvoisClient } from "myinvois-client";
+import { createClient } from "src/utils/client";
 import type {
   GetSubmissionRequestParams,
   GetSubmissionRequestQuery,
@@ -16,14 +17,10 @@ import type {
  */
 export async function getSubmissionDetails(
   params: GetSubmissionRequestParams,
-  query: GetSubmissionRequestQuery
+  query: GetSubmissionRequestQuery,
+  headers: Headers
 ) {
-  const client = new MyInvoisClient(
-    CONFIG.clientId,
-    CONFIG.clientSecret,
-    CONFIG.env,
-    redisInstance
-  );
+  const client = createClient(headers);
 
   const submissionId = params.id; // Assuming the submission ID is a path parameter named 'id'
   const taxpayerTIN = query.taxpayerTIN;

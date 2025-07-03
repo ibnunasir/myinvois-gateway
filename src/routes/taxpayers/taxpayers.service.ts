@@ -6,6 +6,7 @@ import {
 } from "myinvois-client";
 import { CONFIG } from "src/config";
 import { redisInstance } from "src/redis";
+import { createClient } from "src/utils/client";
 import type {
   GetTaxpayerInfoByQRCodeRequestParams,
   GetTaxpayerInfoByQRCodeRequestQuery,
@@ -20,14 +21,10 @@ import type {
  * @throws Error if Client ID, Client Secret are not configured, or if the environment is invalid.
  */
 export const searchTaxpayerTINByParams = async (
-  query: SearchTaxpayerTINRequestQuery
+  query: SearchTaxpayerTINRequestQuery,
+  headers: Headers
 ) => {
-  const client = new MyInvoisClient(
-    CONFIG.clientId,
-    CONFIG.clientSecret,
-    CONFIG.env,
-    redisInstance
-  );
+  const client = createClient(headers);
 
   const params: SearchTaxpayerTINRequestParams = {
     idType: query.idType as TaxpayerIdType, // Ensure schema aligns with this type
@@ -56,14 +53,10 @@ export const searchTaxpayerTINByParams = async (
  */
 export const getTaxpayerInfoByQRCodeFromClient = async (
   params: GetTaxpayerInfoByQRCodeRequestParams,
-  query: GetTaxpayerInfoByQRCodeRequestQuery
+  query: GetTaxpayerInfoByQRCodeRequestQuery,
+  headers: Headers
 ) => {
-  const client = new MyInvoisClient(
-    CONFIG.clientId,
-    CONFIG.clientSecret,
-    CONFIG.env,
-    redisInstance
-  );
+  const client = createClient(headers);
 
   try {
     const result = await client.taxpayer.getTaxpayerInfoByQRCode(

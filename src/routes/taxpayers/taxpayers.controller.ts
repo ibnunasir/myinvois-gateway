@@ -20,8 +20,8 @@ export const taxpayersController = (app: Elysia) => {
       })
       .get(
         "/search/tin",
-        async ({ query }) => {
-          return await searchTaxpayerTINByParams(query);
+        async ({ query, request }) => {
+          return await searchTaxpayerTINByParams(query, request.headers);
         },
         {
           detail: {
@@ -34,8 +34,12 @@ export const taxpayersController = (app: Elysia) => {
       )
       .get(
         "/qrcode/:id",
-        async ({ params, query }) => {
-          return await getTaxpayerInfoByQRCodeFromClient(params, query);
+        async ({ params, query, request }) => {
+          return await getTaxpayerInfoByQRCodeFromClient(
+            params,
+            query,
+            request.headers
+          );
         },
         {
           detail: {

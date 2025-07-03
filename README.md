@@ -26,6 +26,8 @@ Use this gateway to easily submit invoices, credit notes, or debit notes from an
 - **Document Signing:** Manages the document signing process with flexible configuration.
 - **Optional Redis Caching:** Improves performance and reliability by caching responses.
 - **Developer-Friendly API Docs:** Interactive API documentation available via Swagger UI.
+- **Multi-User Credentials:** Override the default client credentials per request using `X-CLIENT-ID` and `X-CLIENT-SECRET` headers.
+- **Health Endpoint:** Simple `/health` route for uptime monitoring.
 
 The API documentation (Swagger UI) is available at `/docs/api` when the application is running.
 
@@ -55,6 +57,8 @@ Create a `.env` file in the root of the project (`myinvois-gateway/.env`) and ad
 ```env
 CLIENT_ID=your_client_id_here
 CLIENT_SECRET=your_client_secret_here
+# Optionally override these per request using headers:
+# X-CLIENT-ID and X-CLIENT-SECRET
 # GATEWAY_API_KEY=your_gateway_api_key_here # Optional
 # REDIS_URL=redis://localhost:6379 # Optional
 
@@ -83,6 +87,15 @@ CLIENT_SECRET=your_client_secret_here
 ```
 
 This `.env` file will be automatically used by `bun run dev`, when running the compiled binary locally (if your application loads it, typically via a library like `dotenv` which Bun might handle implicitly for `process.env`), and by Docker Compose if it's in the same directory.
+
+### Dynamic Credentials via Headers
+
+You can specify MyInvois credentials per request by including the following headers:
+
+- `X-CLIENT-ID`
+- `X-CLIENT-SECRET`
+
+If these headers are provided, they override the `CLIENT_ID` and `CLIENT_SECRET` values from the environment for that request. Both headers must be supplied together.
 
 ## Document Signing Configuration
 

@@ -23,6 +23,7 @@ import {
   createDocumentSubmissionItemFromSelfBilledRefundNote,
 } from "myinvois-client";
 import { redisInstance } from "src/redis"; // Path to your gateway's Redis client instance
+import { createClient } from "src/utils/client";
 import type {
   CancelDocumentRequestParams,
   CancelDocumentRequestQuery,
@@ -55,14 +56,10 @@ import { getSignatureParams } from "src/utils/signature";
 import { MyInvoisError } from "src/utils/error-handler";
 
 export async function getRecentDocuments(
-  query: GetRecentDocumentsRequestQuery
+  query: GetRecentDocumentsRequestQuery,
+  headers: Headers
 ) {
-  const client = new MyInvoisClient(
-    CONFIG.clientId,
-    CONFIG.clientSecret,
-    CONFIG.env,
-    redisInstance
-  );
+  const client = createClient(headers);
 
   const { taxpayerTIN: taxpayerTIN, ...params } = query;
   try {
@@ -81,14 +78,10 @@ export async function getRecentDocuments(
 
 export async function getDocumentDetails(
   params: GetDocumentDetailsRequestParams,
-  query: GetDocumentDetailsRequestQuery
+  query: GetDocumentDetailsRequestQuery,
+  headers: Headers
 ) {
-  const client = new MyInvoisClient(
-    CONFIG.clientId,
-    CONFIG.clientSecret,
-    CONFIG.env,
-    redisInstance
-  );
+  const client = createClient(headers);
 
   const documentId = params.id;
   const taxpayerTIN = query.taxpayerTIN;
@@ -109,14 +102,10 @@ export async function getDocumentDetails(
 
 export async function getDocument(
   params: GetDocumentRequestParams,
-  query: GetDocumentRequestQuery
+  query: GetDocumentRequestQuery,
+  headers: Headers
 ) {
-  const client = new MyInvoisClient(
-    CONFIG.clientId,
-    CONFIG.clientSecret,
-    CONFIG.env,
-    redisInstance
-  );
+  const client = createClient(headers);
 
   const documentId = params.id;
   const taxpayerTIN = query.taxpayerTIN;
@@ -135,13 +124,11 @@ export async function getDocument(
   }
 }
 
-export async function searchDocuments(query: SearchDocumentsRequestQuery) {
-  const client = new MyInvoisClient(
-    CONFIG.clientId,
-    CONFIG.clientSecret,
-    CONFIG.env,
-    redisInstance
-  );
+export async function searchDocuments(
+  query: SearchDocumentsRequestQuery,
+  headers: Headers
+) {
+  const client = createClient(headers);
 
   const { taxpayerTIN, ...params } = query;
   try {
@@ -165,14 +152,10 @@ export async function searchDocuments(query: SearchDocumentsRequestQuery) {
 
 export async function rejectDocument(
   params: RejectDocumentRequestParams,
-  query: RejectDocumentRequestQuery
+  query: RejectDocumentRequestQuery,
+  headers: Headers
 ) {
-  const client = new MyInvoisClient(
-    CONFIG.clientId,
-    CONFIG.clientSecret,
-    CONFIG.env,
-    redisInstance
-  );
+  const client = createClient(headers);
 
   const { id } = params;
   const { reason, taxpayerTIN } = query;
@@ -196,14 +179,10 @@ export async function rejectDocument(
 
 export async function cancelDocument(
   params: CancelDocumentRequestParams,
-  query: CancelDocumentRequestQuery
+  query: CancelDocumentRequestQuery,
+  headers: Headers
 ) {
-  const client = new MyInvoisClient(
-    CONFIG.clientId,
-    CONFIG.clientSecret,
-    CONFIG.env,
-    redisInstance
-  );
+  const client = createClient(headers);
 
   const { id } = params;
   const taxpayerTIN = query.taxpayerTIN;
@@ -229,14 +208,10 @@ export async function cancelDocument(
 
 export async function submitInvoices(
   query: SubmitInvoiceDocumentsQuery,
-  body: SubmitInvoiceDocumentsBody
+  body: SubmitInvoiceDocumentsBody,
+  headers: Headers
 ) {
-  const client = new MyInvoisClient(
-    CONFIG.clientId,
-    CONFIG.clientSecret,
-    CONFIG.env,
-    redisInstance
-  );
+  const client = createClient(headers);
 
   const taxpayerTIN = query.taxpayerTIN;
   const _documents = body.documents;
@@ -273,14 +248,10 @@ export async function submitInvoices(
 
 export async function submitCreditNotes(
   query: SubmitCreditNoteDocumentsQuery,
-  body: SubmitCreditNoteDocumentsBody
+  body: SubmitCreditNoteDocumentsBody,
+  headers: Headers
 ) {
-  const client = new MyInvoisClient(
-    CONFIG.clientId,
-    CONFIG.clientSecret,
-    CONFIG.env,
-    redisInstance
-  );
+  const client = createClient(headers);
 
   const taxpayerTIN = query.taxpayerTIN;
   const _documents = body.documents;
@@ -318,14 +289,10 @@ export async function submitCreditNotes(
 
 export async function submitDebitNotes(
   query: SubmitDebitNoteDocumentsQuery,
-  body: SubmitDebitNoteDocumentsBody
+  body: SubmitDebitNoteDocumentsBody,
+  headers: Headers
 ) {
-  const client = new MyInvoisClient(
-    CONFIG.clientId,
-    CONFIG.clientSecret,
-    CONFIG.env,
-    redisInstance
-  );
+  const client = createClient(headers);
 
   const taxpayerTIN = query.taxpayerTIN;
   const _documents = body.documents;
@@ -365,14 +332,10 @@ export async function submitDebitNotes(
 
 export async function submitRefundNotes(
   query: SubmitRefundNoteDocumentsQuery,
-  body: SubmitRefundNoteDocumentsBody
+  body: SubmitRefundNoteDocumentsBody,
+  headers: Headers
 ) {
-  const client = new MyInvoisClient(
-    CONFIG.clientId,
-    CONFIG.clientSecret,
-    CONFIG.env,
-    redisInstance
-  );
+  const client = createClient(headers);
 
   const taxpayerTIN = query.taxpayerTIN;
   const _documents = body.documents;
@@ -411,14 +374,10 @@ export async function submitRefundNotes(
 
 export async function submitSelfBilledInvoices(
   query: SubmitSelfBilledInvoiceDocumentsQuery,
-  body: SubmitSelfBilledInvoiceDocumentsBody
+  body: SubmitSelfBilledInvoiceDocumentsBody,
+  headers: Headers
 ) {
-  const client = new MyInvoisClient(
-    CONFIG.clientId,
-    CONFIG.clientSecret,
-    CONFIG.env,
-    redisInstance
-  );
+  const client = createClient(headers);
 
   const taxpayerTIN = query.taxpayerTIN;
   const _documents = body.documents;
@@ -457,14 +416,10 @@ export async function submitSelfBilledInvoices(
 
 export async function submitSelfBilledCreditNotes(
   query: SubmitSelfBilledCreditNoteDocumentsQuery,
-  body: SubmitSelfBilledCreditNoteDocumentsBody
+  body: SubmitSelfBilledCreditNoteDocumentsBody,
+  headers: Headers
 ) {
-  const client = new MyInvoisClient(
-    CONFIG.clientId,
-    CONFIG.clientSecret,
-    CONFIG.env,
-    redisInstance
-  );
+  const client = createClient(headers);
 
   const taxpayerTIN = query.taxpayerTIN;
   const _documents = body.documents;
@@ -503,14 +458,10 @@ export async function submitSelfBilledCreditNotes(
 
 export async function submitSelfBilledDebitNotes(
   query: SubmitSelfBilledDebitNoteDocumentsQuery,
-  body: SubmitSelfBilledDebitNoteDocumentsBody
+  body: SubmitSelfBilledDebitNoteDocumentsBody,
+  headers: Headers
 ) {
-  const client = new MyInvoisClient(
-    CONFIG.clientId,
-    CONFIG.clientSecret,
-    CONFIG.env,
-    redisInstance
-  );
+  const client = createClient(headers);
 
   const taxpayerTIN = query.taxpayerTIN;
   const _documents = body.documents;
@@ -549,14 +500,10 @@ export async function submitSelfBilledDebitNotes(
 
 export async function submitSelfBilledRefundNotes(
   query: SubmitSelfBilledRefundNoteDocumentsQuery,
-  body: SubmitSelfBilledRefundNoteDocumentsBody
+  body: SubmitSelfBilledRefundNoteDocumentsBody,
+  headers: Headers
 ) {
-  const client = new MyInvoisClient(
-    CONFIG.clientId,
-    CONFIG.clientSecret,
-    CONFIG.env,
-    redisInstance
-  );
+  const client = createClient(headers);
 
   const taxpayerTIN = query.taxpayerTIN;
   const _documents = body.documents;
